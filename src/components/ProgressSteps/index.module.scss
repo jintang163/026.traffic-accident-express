@@ -1,0 +1,105 @@
+@use '@/styles/variables.scss' as *;
+
+.stepsContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg 0;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-md;
+  overflow-x: auto;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.stepLine {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 40rpx;
+}
+
+.line {
+  flex: 1;
+  height: 4rpx;
+  background: $color-border;
+  transition: all $transition-base;
+  
+  &.lineActive {
+    background: $color-primary;
+  }
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 $spacing-xs;
+}
+
+.stepCircle {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: $radius-round;
+  background: $color-bg-page;
+  border: 4rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+  
+  &.active {
+    background: $color-primary-gradient;
+    border-color: $color-primary;
+  }
+  
+  &.completed {
+    background: $color-success;
+    border-color: $color-success;
+  }
+}
+
+.stepNumber {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-tertiary;
+  
+  .active & {
+    color: $color-text-white;
+  }
+  
+  .completed & {
+    color: $color-text-white;
+  }
+}
+
+.checkIcon {
+  font-size: $font-size-md;
+  color: $color-text-white;
+  font-weight: $font-weight-bold;
+}
+
+.stepTitle {
+  margin-top: $spacing-xs;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  text-align: center;
+  white-space: nowrap;
+  @include text-ellipsis;
+  max-width: 120rpx;
+  
+  &.titleActive {
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+  }
+  
+  &.titleCompleted {
+    color: $color-success;
+  }
+}

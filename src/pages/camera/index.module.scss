@@ -1,0 +1,408 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: #000;
+  position: relative;
+}
+
+.cameraWrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.camera {
+  width: 100%;
+  height: 100%;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.guideBox {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  width: 80%;
+  height: 300rpx;
+  border: 4rpx dashed rgba(255, 255, 255, 0.6);
+  border-radius: $radius-lg;
+  
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 40rpx;
+    height: 40rpx;
+    border: 6rpx solid $color-primary;
+  }
+  
+  &::before {
+    top: -6rpx;
+    left: -6rpx;
+    border-right: none;
+    border-bottom: none;
+    border-radius: $radius-lg 0 0 0;
+  }
+  
+  &::after {
+    bottom: -6rpx;
+    right: -6rpx;
+    border-left: none;
+    border-top: none;
+    border-radius: 0 0 $radius-lg 0;
+  }
+}
+
+.guideCorners {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  width: 80%;
+  height: 300rpx;
+  
+  .corner {
+    position: absolute;
+    width: 40rpx;
+    height: 40rpx;
+    border: 6rpx solid $color-primary;
+    
+    &.topLeft {
+      top: -6rpx;
+      left: -6rpx;
+      border-right: none;
+      border-bottom: none;
+      border-radius: $radius-lg 0 0 0;
+    }
+    
+    &.topRight {
+      top: -6rpx;
+      right: -6rpx;
+      border-left: none;
+      border-bottom: none;
+      border-radius: 0 $radius-lg 0 0;
+    }
+    
+    &.bottomLeft {
+      bottom: -6rpx;
+      left: -6rpx;
+      border-right: none;
+      border-top: none;
+      border-radius: 0 0 0 $radius-lg;
+    }
+    
+    &.bottomRight {
+      bottom: -6rpx;
+      right: -6rpx;
+      border-left: none;
+      border-top: none;
+      border-radius: 0 0 $radius-lg 0;
+    }
+  }
+}
+
+.guideText {
+  position: absolute;
+  top: calc(50% + 180rpx);
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: $color-text-white;
+  font-size: $font-size-md;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.5);
+}
+
+.timer {
+  position: absolute;
+  top: calc(50% - 220rpx);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: $spacing-sm $spacing-lg;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: $radius-round;
+  color: $color-text-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+}
+
+.topBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: calc(env(safe-area-inset-top) + $spacing-md) $spacing-lg $spacing-md;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+  pointer-events: auto;
+}
+
+.backBtn {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-round;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-white;
+  font-size: $font-size-xl;
+}
+
+.vehicleIndicator {
+  padding: $spacing-sm $spacing-lg;
+  background: $color-primary-gradient;
+  border-radius: $radius-round;
+  color: $color-text-white;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.flashBtn {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-round;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-white;
+  font-size: $font-size-xl;
+  
+  &.active {
+    background: $color-primary;
+  }
+}
+
+.bottomBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-xl $spacing-lg calc(env(safe-area-inset-bottom) + $spacing-xl);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+  pointer-events: auto;
+}
+
+.albumBtn {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: $radius-lg;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-white;
+  font-size: 40rpx;
+  position: relative;
+}
+
+.albumCount {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 $spacing-xs;
+  background: $color-danger;
+  border-radius: $radius-round;
+  color: $color-text-white;
+  font-size: $font-size-xs;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shutterBtn {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: $radius-round;
+  background: $color-text-white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: $radius-round;
+    border: 6rpx solid $color-primary;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    width: 100rpx;
+    height: 100rpx;
+    border-radius: $radius-round;
+    background: $color-primary;
+  }
+  
+  &:active {
+    transform: scale(0.95);
+    
+    &::after {
+      background: darken($color-primary, 10%);
+    }
+  }
+}
+
+.switchBtn {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: $radius-lg;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-white;
+  font-size: 40rpx;
+}
+
+.previewOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.previewImage {
+  flex: 1;
+  width: 100%;
+}
+
+.previewActions {
+  padding: $spacing-xl $spacing-lg calc(env(safe-area-inset-bottom) + $spacing-xl);
+  display: flex;
+  gap: $spacing-md;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.btnRetake {
+  flex: 1;
+  height: 88rpx;
+  border-radius: $radius-lg;
+  background: rgba(255, 255, 255, 0.2);
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnConfirm {
+  flex: 2;
+  height: 88rpx;
+  border-radius: $radius-lg;
+  background: $color-primary-gradient;
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.spinner {
+  width: 80rpx;
+  height: 80rpx;
+  border: 6rpx solid rgba(255, 255, 255, 0.3);
+  border-top-color: $color-primary;
+  border-radius: $radius-round;
+  animation: spin 1s linear infinite;
+  margin-bottom: $spacing-lg;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  color: $color-text-white;
+  font-size: $font-size-md;
+  margin-bottom: $spacing-sm;
+}
+
+.loadingSubText {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: $font-size-sm;
+}
+
+.watermarkPreview {
+  position: absolute;
+  bottom: 160rpx;
+  left: $spacing-lg;
+  padding: $spacing-sm $spacing-md;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: $radius-md;
+  pointer-events: none;
+}
+
+.watermarkText {
+  color: $color-text-white;
+  font-size: $font-size-xs;
+  line-height: $line-height-loose;
+}
+
+.modeTabs {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 120rpx);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: $radius-round;
+  padding: $spacing-xs;
+  pointer-events: auto;
+}
+
+.modeTab {
+  padding: $spacing-sm $spacing-xl;
+  border-radius: $radius-round;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: $font-size-sm;
+  transition: all $transition-base;
+  
+  &.active {
+    background: $color-primary;
+    color: $color-text-white;
+  }
+}

@@ -1,0 +1,291 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+.certificateHeader {
+  background: $color-primary-gradient;
+  padding: $spacing-xl $spacing-lg $spacing-xxxl;
+  text-align: center;
+  color: $color-text-white;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -100rpx;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400rpx;
+    height: 400rpx;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+  }
+}
+
+.certificateIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-md;
+  position: relative;
+  z-index: 1;
+}
+
+.certificateTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  margin-bottom: $spacing-sm;
+  position: relative;
+  z-index: 1;
+}
+
+.certificateSubtitle {
+  font-size: $font-size-sm;
+  opacity: 0.9;
+  position: relative;
+  z-index: 1;
+}
+
+.content {
+  padding: $spacing-lg;
+  margin-top: -$spacing-xxl;
+  position: relative;
+  z-index: 2;
+}
+
+.certificateCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+  position: relative;
+}
+
+.certificateSeal {
+  position: absolute;
+  top: $spacing-lg;
+  right: $spacing-lg;
+  width: 120rpx;
+  height: 120rpx;
+  border: 4rpx solid $color-danger;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transform: rotate(-15deg);
+  
+  .sealText {
+    font-size: $font-size-xs;
+    color: $color-danger;
+    font-weight: $font-weight-bold;
+    text-align: center;
+    line-height: 1.2;
+  }
+}
+
+.cardSection {
+  margin-bottom: $spacing-lg;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.cardSectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 2rpx solid $color-divider;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.infoRow {
+  display: flex;
+  padding: $spacing-sm 0;
+}
+
+.infoLabel {
+  width: 180rpx;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.liabilityBox {
+  background: linear-gradient(135deg, rgba(30, 94, 250, 0.05) 0%, rgba(77, 132, 255, 0.05) 100%);
+  border: 2rpx solid rgba(30, 94, 250, 0.2);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+}
+
+.liabilityText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+  margin-bottom: $spacing-md;
+}
+
+.liabilitySplit {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.liabilityParty {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+}
+
+.partyName {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+}
+
+.partyPlate {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.partyRatio {
+  font-size: 32rpx;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.verifySection {
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.05) 0%, rgba(115, 214, 65, 0.05) 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.verifyIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  background: rgba(82, 196, 26, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+}
+
+.verifyInfo {
+  flex: 1;
+}
+
+.verifyTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: #52C41A;
+  margin-bottom: $spacing-xs;
+}
+
+.verifyCode {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.actionItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+  
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.actionIcon {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: $radius-lg;
+  background: linear-gradient(135deg, rgba(30, 94, 250, 0.1) 0%, rgba(77, 132, 255, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+}
+
+.actionText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-md $spacing-lg;
+  padding-bottom: calc(env(safe-area-inset-bottom) + #{$spacing-md});
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  gap: $spacing-md;
+}
+
+.btnSecondary {
+  flex: 1;
+  height: 88rpx;
+  border-radius: $radius-lg;
+  background: $color-bg-gray;
+  color: $color-text-secondary;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnPrimary {
+  flex: 2;
+  height: 88rpx;
+  border-radius: $radius-lg;
+  background: $color-primary-gradient;
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: $shadow-primary-btn;
+}
+
+.safeBottom {
+  height: calc(env(safe-area-inset-bottom) + 120rpx);
+}

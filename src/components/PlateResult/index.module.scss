@@ -1,0 +1,214 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.vehicleTag {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.confidenceTag {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 0;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  border: 2rpx dashed $color-border;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-md;
+  opacity: 0.5;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.photoPreview {
+  width: 100%;
+  height: 240rpx;
+  margin-bottom: $spacing-lg;
+  border-radius: $radius-md;
+  overflow: hidden;
+  background: $color-bg-page;
+}
+
+.photoImage {
+  width: 100%;
+  height: 100%;
+}
+
+.resultSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.plateDisplay {
+  margin-bottom: $spacing-lg;
+}
+
+.plateLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.plateNoBox {
+  background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-lg;
+  text-align: center;
+  border: 2rpx solid #fff;
+  box-shadow: 0 4rpx 12rpx rgba(26, 115, 232, 0.3);
+}
+
+.plateNo {
+  font-size: 56rpx;
+  font-weight: $font-weight-bold;
+  color: #fff;
+  letter-spacing: 8rpx;
+  font-family: 'Arial', sans-serif;
+}
+
+.infoGrid {
+  display: flex;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.infoItem {
+  flex: 1;
+}
+
+.infoLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.infoValue {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.actions {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.editBtn,
+.retakeBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+  
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.editBtn {
+  background: $color-bg-card;
+  border: 2rpx solid $color-primary;
+  color: $color-primary;
+}
+
+.retakeBtn {
+  background: $color-primary-gradient;
+  color: $color-text-white;
+}
+
+.editSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.plateInput {
+  height: 96rpx;
+  background: $color-bg-page;
+  border: 2rpx solid $color-border;
+  border-radius: $radius-md;
+  padding: 0 $spacing-lg;
+  font-size: 48rpx;
+  font-weight: $font-weight-semibold;
+  text-align: center;
+  letter-spacing: 8rpx;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  
+  &.inputError {
+    border-color: $color-error;
+  }
+  
+  &:focus {
+    border-color: $color-primary;
+  }
+}
+
+.errorText {
+  font-size: $font-size-sm;
+  color: $color-error;
+  margin-bottom: $spacing-md;
+}
+
+.editActions {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.cancelBtn,
+.saveBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+  
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.cancelBtn {
+  background: $color-bg-page;
+  color: $color-text-secondary;
+}
+
+.saveBtn {
+  background: $color-primary-gradient;
+  color: $color-text-white;
+}

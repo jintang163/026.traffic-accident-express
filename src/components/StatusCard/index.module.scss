@@ -1,0 +1,198 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+  
+  &:active {
+    transform: scale(0.99);
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 2rpx solid $color-divider;
+}
+
+.leftInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.reportNo {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.statusTag {
+  padding: 4rpx 16rpx;
+  border-radius: $radius-sm;
+  
+  &.pending {
+    background: rgba(255, 125, 0, 0.1);
+  }
+  
+  &.processing {
+    background: rgba(30, 94, 250, 0.1);
+  }
+  
+  &.completed {
+    background: rgba(0, 180, 42, 0.1);
+  }
+  
+  &.rejected {
+    background: rgba(245, 63, 63, 0.1);
+  }
+}
+
+.statusText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  
+  .pending & {
+    color: $color-status-pending;
+  }
+  
+  .processing & {
+    color: $color-status-processing;
+  }
+  
+  .completed & {
+    color: $color-status-completed;
+  }
+  
+  .rejected & {
+    color: $color-status-rejected;
+  }
+}
+
+.arrowIcon {
+  font-size: 48rpx;
+  color: $color-text-tertiary;
+  line-height: 1;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.locationRow,
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.locationIcon,
+.timeIcon {
+  font-size: $font-size-md;
+}
+
+.locationText,
+.timeText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  @include text-ellipsis;
+  flex: 1;
+}
+
+.vehiclesRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  margin-top: $spacing-xs;
+}
+
+.vehicleItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  background: $color-bg-page;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+}
+
+.vehicleTag {
+  width: 36rpx;
+  height: 36rpx;
+  background: $color-primary;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vehicleIndex {
+  font-size: 20rpx;
+  color: $color-text-white;
+  font-weight: $font-weight-bold;
+}
+
+.plateNo {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  font-family: 'Arial', sans-serif;
+}
+
+.vsText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-semibold;
+}
+
+.typeRow {
+  display: flex;
+  align-items: center;
+  margin-top: $spacing-xs;
+}
+
+.typeLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.typeValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.cardFooter {
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 2rpx solid $color-divider;
+  background: linear-gradient(90deg, rgba(30, 94, 250, 0.05) 0%, transparent 100%);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  margin-left: -$spacing-xs;
+  margin-right: -$spacing-xs;
+}
+
+.liabilityLabel {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.liabilityText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
