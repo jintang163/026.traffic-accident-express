@@ -1,0 +1,126 @@
+<view class="page">
+  <view class="header" style="padding-top: {{statusBarHeight}}px;">
+    <view class="header-content">
+      <view class="greeting">
+        <text class="greeting-text">您好，欢迎使用</text>
+        <text class="title">交通事故快速处理</text>
+      </view>
+      <view class="emergency-btns">
+        <view class="emergency-btn police" bindtap="callPolice">
+          <text class="emergency-icon">🚨</text>
+          <text class="emergency-text">报警</text>
+        </view>
+        <view class="emergency-btn insurance" bindtap="callInsurance">
+          <text class="emergency-icon">📋</text>
+          <text class="emergency-text">保险</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="container">
+    <view class="quick-action card" bindtap="goToReport">
+      <view class="quick-action-icon">🚗</view>
+      <view class="quick-action-content">
+        <text class="quick-action-title">快速报案</text>
+        <text class="quick-action-desc">拍照取证 · 快速定责 · 生成认定书</text>
+      </view>
+      <text class="arrow">›</text>
+    </view>
+
+    <view class="statistics card">
+      <view class="stats-header">
+        <text class="stats-title">我的报案</text>
+        <text class="stats-link" bindtap="goToCertificates">查看全部 ›</text>
+      </view>
+      <view class="stats-row">
+        <view class="stats-item">
+          <text class="stats-number">{{statistics.total}}</text>
+          <text class="stats-label">总报案</text>
+        </view>
+        <view class="stats-divider"></view>
+        <view class="stats-item">
+          <text class="stats-number text-warning">{{statistics.pending}}</text>
+          <text class="stats-label">处理中</text>
+        </view>
+        <view class="stats-divider"></view>
+        <view class="stats-item">
+          <text class="stats-number text-success">{{statistics.completed}}</text>
+          <text class="stats-label">已完成</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="quick-functions">
+      <view class="func-title">快捷功能</view>
+      <view class="func-grid">
+        <view class="func-item" bindtap="goToCamera">
+          <view class="func-icon">📷</view>
+          <text class="func-text">拍照取证</text>
+        </view>
+        <view class="func-item" bindtap="showGuide">
+          <view class="func-icon">📖</view>
+          <text class="func-text">处理指南</text>
+        </view>
+        <view class="func-item" bindtap="goToCertificates">
+          <view class="func-icon">📄</view>
+          <text class="func-text">认定书</text>
+        </view>
+        <view class="func-item" bindtap="callPolice">
+          <view class="func-icon">📞</view>
+          <text class="func-text">一键报警</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="recent-section">
+      <view class="section-header">
+        <text class="section-title">最近报案</text>
+        <text class="section-more" bindtap="goToReport">更多 ›</text>
+      </view>
+      
+      <view wx:if="{{loading}}" class="loading-container">
+        <view class="loading"></view>
+        <text class="loading-text">加载中...</text>
+      </view>
+      
+      <view wx:elif="{{recentAccidents.length === 0}}" class="empty">
+        <text class="empty-icon">📋</text>
+        <text class="empty-text">暂无报案记录</text>
+      </view>
+      
+      <view wx:else>
+        <view 
+          wx:for="{{recentAccidents}}" 
+          wx:key="id" 
+          class="accident-item card"
+          bindtap="goToAccidentDetail"
+          data-id="{{item.id}}"
+        >
+          <view class="accident-header">
+            <text class="accident-number">{{item.accidentNumber}}</text>
+            <text class="tag {{item.status === 'completed' ? 'tag-success' : 'tag-warning'}}">
+              {{item.statusText}}
+            </text>
+          </view>
+          <view class="accident-info">
+            <view class="info-row">
+              <text class="info-label">事故类型：</text>
+              <text class="info-value">{{item.accidentTypeText}}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">发生地点：</text>
+              <text class="info-value ellipsis">{{item.location}}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">发生时间：</text>
+              <text class="info-value">{{item.accidentTime}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </view>
+</view>

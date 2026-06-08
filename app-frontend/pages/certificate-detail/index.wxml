@@ -1,0 +1,227 @@
+<view class="container" wx:if="{{certificate}}">
+  <view class="cert-header">
+    <view class="cert-title">
+      <text class="title-main">道路交通事故认定书</text>
+      <text class="title-sub">{{certificate.certificateNumber}}</text>
+    </view>
+    <view class="cert-status status-{{certificate.status}}">{{certificate.statusText}}</view>
+  </view>
+  
+  <view class="cert-body">
+    <view class="section">
+      <view class="section-title">事故信息</view>
+      <view class="info-row">
+        <view class="info-label">事故编号</view>
+        <view class="info-value">{{certificate.accidentNumber}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">事故类型</view>
+        <view class="info-value">{{certificate.accidentType}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">发生时间</view>
+        <view class="info-value">{{certificate.accidentTime}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">发生地点</view>
+        <view class="info-value">{{certificate.location}}</view>
+      </view>
+    </view>
+    
+    <view class="section">
+      <view class="section-title">当事人信息</view>
+      
+      <view class="party-card party-a">
+        <view class="party-header">
+          <text class="party-tag">甲方</text>
+          <text class="party-name">{{certificate.partyA.name}}</text>
+        </view>
+        <view class="party-info">
+          <view class="info-row">
+            <view class="info-label">驾驶证号</view>
+            <view class="info-value">{{certificate.partyA.idNumber}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-label">联系电话</view>
+            <view class="info-value">{{certificate.partyA.phone}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-label">车牌号码</view>
+            <view class="info-value plate">{{certificate.partyA.plateNumber}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-label">车辆类型</view>
+            <view class="info-value">{{certificate.partyA.vehicleType}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-label">保险公司</view>
+            <view class="info-value">{{certificate.partyA.insurance}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-label">责任认定</view>
+            <view class="info-value responsibility">{{certificate.liability.partyAResponsibility || '无责任'}}</view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="vs-divider">
+        <text class="vs-text">VS</text>
+      </view>
+      
+      <view class="party-card party-b">
+        <view class="party-header">
+          <text class="party-tag">乙方</text>
+          <text class="party-name">{{certificate.partyB.name}}</text>
+        </view>
+        <view class="party-info">
+          <view class="info-row">
+            <view class="info-label">驾驶证号</view>
+            <view class="info-value">{{certificate.partyB.idNumber}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-label">联系电话</view>
+            <view class="info-value">{{certificate.partyB.phone}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-label">车牌号码</view>
+            <view class="info-value plate">{{certificate.partyB.plateNumber}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-label">车辆类型</view>
+            <view class="info-value">{{certificate.partyB.vehicleType}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-label">保险公司</view>
+            <view class="info-value">{{certificate.partyB.insurance}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-label">责任认定</view>
+            <view class="info-value responsibility">{{certificate.liability.partyBresponsibility || '全部责任'}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="section">
+      <view class="section-title">事故事实</view>
+      <view class="facts-box">
+        <text>{{certificate.accidentFacts}}</text>
+      </view>
+    </view>
+    
+    <view class="section">
+      <view class="section-title">责任认定及依据</view>
+      <view class="liability-box">
+        <view class="liability-conclusion">
+          <text class="conclusion-label">认定结论</text>
+          <text class="conclusion-text">{{certificate.liability.conclusion}}</text>
+        </view>
+        <view class="legal-basis">
+          <text class="basis-label">法律依据</text>
+          <text class="basis-text">{{certificate.legalBasis}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="section">
+      <view class="section-title">办案民警</view>
+      <view class="police-info">
+        <view class="info-row">
+          <view class="info-label">民警姓名</view>
+          <view class="info-value">{{certificate.policeOfficer}}</view>
+        </view>
+        <view class="info-row">
+          <view class="info-label">警号</view>
+          <view class="info-value">{{certificate.policeBadge}}</view>
+        </view>
+        <view class="info-row">
+          <view class="info-label">办案单位</view>
+          <view class="info-value">{{certificate.department}}</view>
+        </view>
+        <view class="info-row">
+          <view class="info-label">出具时间</view>
+          <view class="info-value">{{certificate.createdAt}}</view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="section seal-section">
+      <view class="seal-box">
+        <view class="seal-text">{{certificate.sealText}}</view>
+        <view class="seal-stamp">
+          <view class="stamp-circle">
+            <text class="stamp-text">{{certificate.department}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="section">
+      <view class="verify-section">
+        <view class="verify-info">
+          <text class="verify-label">核验码</text>
+          <text class="verify-code" bindtap="copyVerifyCode">{{certificate.verifyCode}}</text>
+          <text class="verify-copy">点击复制</text>
+        </view>
+        <button class="verify-btn" bindtap="doVerify" wx:if="{{!verified}}">
+          <text>立即核验</text>
+        </button>
+        <view class="verify-result" wx:if="{{verified}}">
+          <text class="verify-success" wx:if="{{verifyResult.valid}}">✅ 核验通过</text>
+          <text class="verify-fail" wx:else">❌ {{verifyResult.message}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="section">
+      <view class="section-title">备注说明</view>
+      <view class="remarks-list">
+        <view class="remark-item" wx:for="{{certificate.remarks}}" wx:for-item="remark" wx:key="*this">
+          <text class="remark-dot">•</text>
+          <text class="remark-text">{{remark}}</text>
+        </view>
+      </view>
+      <button class="link-btn" bindtap="goToAccident">
+          <text>查看事故详情</text>
+          <text class="link-arrow">›</text>
+        </button>
+    </view>
+  </view>
+  
+  <view class="bottom-actions">
+    <button class="action-btn action-secondary" bindtap="showSend">
+      <text class="action-icon">📤</text>
+      <text class="action-text">发送</text>
+    </button>
+    <button class="action-btn action-secondary" bindtap="doShare">
+      <text class="action-icon">📲</text>
+      <text class="action-text">分享</text>
+    </button>
+    <button class="action-btn action-secondary" bindtap="doDownload">
+      <text class="action-icon">⬇️</text>
+      <text class="action-text">下载</text>
+    </button>
+    <button class="action-btn action-primary" open-type="share">
+      <text class="action-icon">🔗</text>
+      <text class="action-text">转发</text>
+    </button>
+  </view>
+</view>
+
+<view class="send-modal" wx:if="{{showSendModal}}">
+  <view class="modal-mask" bindtap="hideSend"></view>
+  <view class="modal-content">
+    <view class="modal-title">发送认定书</view>
+    <view class="modal-desc">输入手机号，认定书将以短信形式发送</view>
+    <input class="modal-input" type="number" placeholder="请输入接收手机号" value="{{sendPhone}}" bindinput="onPhoneInput" maxlength="11" />
+    <view class="modal-actions">
+      <button class="modal-btn modal-cancel" bindtap="hideSend">取消</button>
+      <button class="modal-btn modal-confirm" bindtap="doSend">发送</button>
+    </view>
+  </view>
+</view>
+
+<view class="loading" wx:if="{{loading}}">
+  <view class="loading-spinner"></view>
+  <text>加载中...</text>
+</view>

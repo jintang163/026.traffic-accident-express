@@ -1,0 +1,428 @@
+<view class="page">
+  <view class="steps">
+    <view 
+      wx:for="{{steps}}" 
+      wx:key="index"
+      class="step {{index < currentStep ? 'step-completed' : ''}} {{index === currentStep ? 'step-active' : ''}}"
+    >
+      <view class="step-circle">{{index < currentStep ? '✓' : index + 1}}</view>
+      <text class="step-text">{{item.title}}</text>
+    </view>
+  </view>
+
+  <view class="container">
+    <view wx:if="{{currentStep === 0}}" class="step-content">
+      <view class="card">
+        <view class="step-title">
+          <text class="step-icon">🚗</text>
+          <text class="step-title-text">车牌识别</text>
+        </view>
+        <text class="step-desc">请分别拍摄事故双方车辆的车牌照片，系统将自动识别车牌号码</text>
+        
+        <view class="vehicle-section">
+          <view class="vehicle-header">
+            <text class="vehicle-label">A车（我方）</text>
+            <text class="vehicle-edit" bindtap="editPlateNumber" data-index="0" wx:if="{{vehicles[0].plateNumber}}">编辑</text>
+          </view>
+          
+          <view wx:if="{{!editingPlate || currentVehicleIndex !== 0}}" class="plate-result" bindtap="goToCamera" data-mode="plate" data-vehicle-index="0">
+            <view wx:if="{{vehicles[0].plateNumber}}" class="plate-info">
+              <view class="plate-number">{{vehicles[0].plateNumber}}</view>
+              <view class="plate-meta">
+                <text class="plate-color tag tag-primary">{{vehicles[0].plateColor}}牌</text>
+                <text class="plate-confidence">置信度: {{(vehicles[0].confidence * 100).toFixed(0)}}%</text>
+              </view>
+            </view>
+            <view wx:else class="plate-placeholder">
+              <text class="placeholder-icon">📷</text>
+              <text class="placeholder-text">点击拍摄A车车牌</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="vehicle-section mt-32">
+          <view class="vehicle-header">
+            <text class="vehicle-label">B车（对方）</text>
+            <text class="vehicle-edit" bindtap="editPlateNumber" data-index="1" wx:if="{{vehicles[1].plateNumber}}">编辑</text>
+          </view>
+          
+          <view wx:if="{{!editingPlate || currentVehicleIndex !== 1}}" class="plate-result" bindtap="goToCamera" data-mode="plate" data-vehicle-index="1">
+            <view wx:if="{{vehicles[1].plateNumber}}" class="plate-info">
+              <view class="plate-number">{{vehicles[1].plateNumber}}</view>
+              <view class="plate-meta">
+                <text class="plate-color tag tag-primary">{{vehicles[1].plateColor}}牌</text>
+                <text class="plate-confidence">置信度: {{(vehicles[1].confidence * 100).toFixed(0)}}%</text>
+              </view>
+            </view>
+            <view wx:else class="plate-placeholder">
+              <text class="placeholder-icon">📷</text>
+              <text class="placeholder-text">点击拍摄B车车牌</text>
+            </view>
+          </view>
+        </view>
+
+        <view wx:if="{{editingPlate}}" class="edit-modal">
+          <view class="edit-content">
+            <view class="edit-title">编辑车牌信息</view>
+            <view class="form-item">
+              <text class="form-label form-label-required">车牌号码</text>
+              <input 
+                class="form-input" 
+                value="{{vehicles[currentVehicleIndex].plateNumber}}" 
+                bindinput="onPlateInput"
+                placeholder="请输入车牌号码"
+                maxlength="10"
+              />
+            </view>
+            <view class="form-item">
+              <text class="form-label form-label-required">车牌颜色</text>
+              <picker 
+                range="{{['蓝', '黄', '绿', '白', '黑']}}" 
+                bindchange="onPlateColorChange"
+              >
+                <view class="form-input picker-input">
+                  {{vehicles[currentVehicleIndex].plateColor || '请选择车牌颜色'}}
+                </view>
+              </picker>
+            </view>
+            <view class="edit-buttons">
+              <button class="btn btn-secondary btn-block" bindtap="confirmEditPlate">确认</button>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{currentStep === 1}}" class="step-content">
+      <view class="card">
+        <view class="step-title">
+          <text class="step-icon">📷</text>
+          <text class="step-title-text">现场拍照</text>
+        </view>
+        <text class="step-desc">请拍摄事故现场全景照片（至少3张），包括车道线、碰撞点、路标等</text>
+        
+        <view class="photo-tips">
+          <text class="tip-item">• 车头远景（含两车位置和道路标线）</text>
+          <text class="tip-item">• 碰撞部位特写</text>
+          <text class="tip-item">• 车辆侧方（含两车全貌）</text>
+          <text class="tip-item">• 路面痕迹（刹车印、散落物）</text>
+        </view>
+
+        <view class="photo-grid">
+          <view 
+            wx:for="{{photos}}" 
+            wx:key="index"
+            class="photo-item"
+          >
+            <image class="photo-image" src="{{item}}" mode="aspectFill" bindtap="previewPhoto" data-index="{{index}}"></image>
+            <view class="photo-remove" bindtap="removePhoto" data-index="{{index}}">×</view>
+          </view>
+          
+          <view class="photo-add" bindtap="goToCamera" data-mode="scene" wx:if="{{photos.length < 9}}">
+            <text class="add-icon">+</text>
+            <text class="add-text">{{photos.length}}/9</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{currentStep === 2}}" class="step-content">
+      <view class="card">
+        <view class="step-title">
+          <text class="step-icon">📝</text>
+          <text class="step-title-text">事故信息</text>
+        </view>
+
+        <view class="form-item">
+          <text class="form-label form-label-required">事故类型</text>
+          <picker 
+            range="{{accidentTypes}}" 
+            range-key="label"
+            value="{{accidentTypeIndex}}"
+            bindchange="onAccidentTypeChange"
+          >
+            <view class="form-input picker-input">
+              {{accidentTypeIndex >= 0 ? accidentTypes[accidentTypeIndex].label : '请选择事故类型'}}
+            </view>
+          </picker>
+        </view>
+
+        <view class="form-item">
+          <text class="form-label form-label-required">事故时间</text>
+          <picker 
+            mode="multiSelector"
+            value="{{[0,0,0,0,0]}}"
+            bindchange="onTimeChange"
+          >
+            <view class="form-input picker-input">
+              {{accidentTime}}
+            </view>
+          </picker>
+        </view>
+
+        <view class="form-item">
+          <text class="form-label form-label-required">事故地点</text>
+          <view class="location-input">
+            <input 
+              class="form-input flex-1" 
+              value="{{location}}" 
+              placeholder="正在获取位置..."
+              disabled
+            />
+            <view class="location-btn" bindtap="selectLocation">
+              <text wx:if="{{gettingLocation}}" class="loading"></text>
+              <text wx:else>📍</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-row">
+          <view class="form-item flex-1 mr-8">
+            <text class="form-label">天气</text>
+            <picker 
+              range="{{weatherOptions}}" 
+              value="{{weatherIndex}}"
+              bindchange="onWeatherChange"
+            >
+              <view class="form-input picker-input">{{weather}}</view>
+            </picker>
+          </view>
+          <view class="form-item flex-1 ml-8">
+            <text class="form-label">路面</text>
+            <picker 
+              range="{{roadOptions}}" 
+              value="{{roadIndex}}"
+              bindchange="onRoadChange"
+            >
+              <view class="form-input picker-input">{{roadCondition}}</view>
+            </picker>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">事故描述</text>
+          <textarea 
+            class="form-textarea" 
+            value="{{description}}"
+            bindinput="onDescriptionInput"
+            placeholder="请简要描述事故经过..."
+            maxlength="500"
+          />
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="step-title">
+          <text class="step-icon">👤</text>
+          <text class="step-title-text">A车驾驶员（我方）</text>
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label form-label-required">姓名</text>
+          <input 
+            class="form-input" 
+            value="{{driverA.name}}"
+            bindinput="onDriverInput"
+            data-vehicle="A"
+            data-field="name"
+            placeholder="请输入姓名"
+          />
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label form-label-required">联系电话</text>
+          <input 
+            class="form-input" 
+            type="number"
+            value="{{driverA.phone}}"
+            bindinput="onDriverInput"
+            data-vehicle="A"
+            data-field="phone"
+            placeholder="请输入联系电话"
+            maxlength="11"
+          />
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">驾驶证号</text>
+          <input 
+            class="form-input" 
+            value="{{driverA.license}}"
+            bindinput="onDriverInput"
+            data-vehicle="A"
+            data-field="license"
+            placeholder="请输入驾驶证号（可选）"
+          />
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="step-title">
+          <text class="step-icon">👤</text>
+          <text class="step-title-text">B车驾驶员（对方）</text>
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label form-label-required">姓名</text>
+          <input 
+            class="form-input" 
+            value="{{driverB.name}}"
+            bindinput="onDriverInput"
+            data-vehicle="B"
+            data-field="name"
+            placeholder="请输入姓名"
+          />
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label form-label-required">联系电话</text>
+          <input 
+            class="form-input" 
+            type="number"
+            value="{{driverB.phone}}"
+            bindinput="onDriverInput"
+            data-vehicle="B"
+            data-field="phone"
+            placeholder="请输入联系电话"
+            maxlength="11"
+          />
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">驾驶证号</text>
+          <input 
+            class="form-input" 
+            value="{{driverB.license}}"
+            bindinput="onDriverInput"
+            data-vehicle="B"
+            data-field="license"
+            placeholder="请输入驾驶证号（可选）"
+          />
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{currentStep === 3}}" class="step-content">
+      <view class="card">
+        <view class="step-title">
+          <text class="step-icon">✅</text>
+          <text class="step-title-text">确认信息</text>
+        </view>
+        <text class="step-desc">请确认以下信息是否正确，确认后将提交并自动进行责任判定</text>
+
+        <view class="summary-section">
+          <view class="summary-title">车辆信息</view>
+          <view class="summary-row">
+            <text class="summary-label">A车车牌：</text>
+            <text class="summary-value">{{vehicles[0].plateNumber}} ({{vehicles[0].plateColor}}牌)</text>
+          </view>
+          <view class="summary-row">
+            <text class="summary-label">B车车牌：</text>
+            <text class="summary-value">{{vehicles[1].plateNumber}} ({{vehicles[1].plateColor}}牌)</text>
+          </view>
+        </view>
+
+        <view class="divider"></view>
+
+        <view class="summary-section">
+          <view class="summary-title">事故信息</view>
+          <view class="summary-row">
+            <text class="summary-label">事故类型：</text>
+            <text class="summary-value">{{accidentTypeIndex >= 0 ? accidentTypes[accidentTypeIndex].label : '-'}}</text>
+          </view>
+          <view class="summary-row">
+            <text class="summary-label">事故时间：</text>
+            <text class="summary-value">{{accidentTime}}</text>
+          </view>
+          <view class="summary-row">
+            <text class="summary-label">事故地点：</text>
+            <text class="summary-value">{{location}}</text>
+          </view>
+          <view class="summary-row">
+            <text class="summary-label">天气/路面：</text>
+            <text class="summary-value">{{weather}} / {{roadCondition}}</text>
+          </view>
+          <view class="summary-row" wx:if="{{description}}">
+            <text class="summary-label">事故描述：</text>
+            <text class="summary-value">{{description}}</text>
+          </view>
+        </view>
+
+        <view class="divider"></view>
+
+        <view class="summary-section">
+          <view class="summary-title">现场照片</view>
+          <scroll-view class="photo-preview" scroll-x>
+            <image 
+              wx:for="{{photos}}" 
+              wx:key="index"
+              class="preview-image"
+              src="{{item}}"
+              mode="aspectFill"
+            />
+          </scroll-view>
+        </view>
+      </view>
+
+      <view class="card notice-card">
+        <text class="notice-icon">⚠️</text>
+        <view class="notice-content">
+          <text class="notice-title">重要提示</text>
+          <text class="notice-text">提交后系统将自动进行责任判定并生成电子认定书，认定书具有法律效力，请确保信息真实准确。</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{currentStep === 4}}" class="step-content success-content">
+      <view class="success-card">
+        <view class="success-icon">✓</view>
+        <text class="success-title">提交成功</text>
+        <text class="success-desc">事故报告已提交，系统已完成责任判定</text>
+        
+        <view class="result-section" wx:if="{{submitResult}}">
+          <view class="result-item">
+            <text class="result-label">事故编号</text>
+            <text class="result-value">{{submitResult.accident.accidentNumber || submitResult.accident.id}}</text>
+          </view>
+          <view class="result-item">
+            <text class="result-label">责任认定</text>
+            <text class="result-value text-primary-color">{{submitResult.liability?.description || '已完成'}}</text>
+          </view>
+          <view class="result-item">
+            <text class="result-label">认定书编号</text>
+            <text class="result-value">{{submitResult.certificate?.certificateNumber || '已生成'}}</text>
+          </view>
+        </view>
+
+        <view class="success-buttons">
+          <button class="btn btn-primary btn-lg btn-block" bindtap="goToCertificate">查看认定书</button>
+          <button class="btn btn-secondary btn-lg btn-block mt-16" bindtap="resetAndGoHome">返回首页</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="safe-bottom" style="height: 140rpx;"></view>
+  </view>
+
+  <view wx:if="{{currentStep < 4}}" class="footer-bar">
+    <view class="footer-buttons">
+      <button 
+        wx:if="{{currentStep > 0}}" 
+        class="btn btn-secondary flex-1 mr-16" 
+        bindtap="prevStep"
+      >上一步</button>
+      <button 
+        wx:if="{{currentStep < 3}}" 
+        class="btn btn-primary flex-1" 
+        bindtap="nextStep"
+      >下一步</button>
+      <button 
+        wx:if="{{currentStep === 3}}" 
+        class="btn btn-primary flex-1" 
+        bindtap="submit"
+        loading="{{submitting}}"
+        disabled="{{submitting}}"
+      >{{submitting ? '提交中...' : '确认提交'}}</button>
+    </view>
+  </view>
+</view>

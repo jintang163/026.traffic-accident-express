@@ -1,0 +1,58 @@
+<view class="container">
+  <view class="header">
+    <view class="user-card">
+      <view class="avatar">
+        <text wx:if="{{!userInfo.avatar}}">{{isLoggedIn ? userInfo.name.charAt(0) : '👤'}}</text>
+        <image wx:else src="{{userInfo.avatar}}" mode="aspectFill"></image>
+      </view>
+      <view class="user-info">
+        <view class="user-name">{{userInfo.name}}</view>
+        <view class="user-phone" wx:if="{{isLoggedIn}}">{{userInfo.phone}}</view>
+        <view class="user-phone" wx:else>登录后查看更多服务</view>
+      </view>
+      <view class="login-btn" wx:if="{{!isLoggedIn}}" bindtap="doLogin">
+        <text>登录</text>
+      </view>
+      <view class="logout-btn" wx:else bindtap="doLogout">
+        <text>退出</text>
+      </view>
+    </view>
+    
+    <view class="stats-row" wx:if="{{isLoggedIn}}">
+      <view class="stat-item">
+        <view class="stat-value">{{statistics.totalReports}}</view>
+        <view class="stat-label">报案总数</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-value">{{statistics.completedReports}}</view>
+        <view class="stat-label">已完成</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-value">{{statistics.pendingReports}}</view>
+        <view class="stat-label">待处理</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-value">{{statistics.totalCertificates}}</view>
+        <view class="stat-label">认定书</view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="menu-container">
+    <view class="menu-group" wx:for="{{menuGroups}}" wx:for-item="group" wx:key="title">
+      <view class="group-title">{{group.title}}</view>
+      <view class="menu-list">
+        <view class="menu-item" wx:for="{{group.items}}" wx:for-item="item" wx:key="key" data-key="{{item.key}}" bindtap="onMenuTap">
+          <view class="menu-icon">{{item.icon}}</view>
+          <view class="menu-label">{{item.label}}</view>
+          <view class="menu-badge" wx:if="{{item.badge > 0}}">{{item.badge}}</view>
+          <view class="menu-arrow">›</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="footer">
+    <text>交通事故快速处理平台 v1.0.0</text>
+  </view>
+</view>

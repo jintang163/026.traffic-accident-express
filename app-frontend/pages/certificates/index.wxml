@@ -1,0 +1,123 @@
+<view class="page">
+  <view class="header">
+    <view class="header-content">
+      <text class="header-title">我的认定书</text>
+      <view class="verify-btn" bindtap="showVerify">
+        <text class="verify-icon">🔍</text>
+        <text class="verify-text">核验</text>
+      </view>
+    </view>
+    
+    <view class="tabs">
+      <view 
+        wx:for="{{tabs}}" 
+        wx:key="key"
+        class="tab {{activeTab === item.key ? 'active' : ''}}"
+        bindtap="switchTab"
+        data-key="{{item.key}}"
+      >
+        {{item.label}}
+      </view>
+    </view>
+  </view>
+
+  <view class="container">
+    <view wx:if="{{loading}}" class="loading-container">
+      <view class="loading"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+    
+    <view wx:elif="{{certificates.length === 0}}" class="empty">
+      <text class="empty-icon">📄</text>
+      <text class="empty-text">暂无认定书记录</text>
+    </view>
+    
+    <view wx:else>
+      <view 
+        wx:for="{{certificates}}" 
+        wx:key="id"
+        class="cert-card card"
+        bindtap="goToDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="cert-header">
+          <view class="cert-number">
+            <text class="cert-icon">📜</text>
+            <text class="cert-number-text">{{item.certificateNumber}}</text>
+          </view>
+          <text class="tag {{item.status === 'completed' ? 'tag-success' : 'tag-warning'}}">
+            {{item.statusText}}
+          </text>
+        </view>
+        
+        <view class="cert-info">
+          <view class="info-row">
+            <text class="info-label">事故时间：</text>
+            <text class="info-value">{{item.accidentTime}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">事故地点：</text>
+            <text class="info-value ellipsis">{{item.location}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">当事人：</text>
+            <text class="info-value">{{item.partyA}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label"></text>
+            <text class="info-value">{{item.partyB}}</text>
+          </view>
+        </view>
+        
+        <view class="cert-liability">
+          <text class="liability-label">责任认定：</text>
+          <text class="liability-text ellipsis-2">{{item.liability}}</text>
+        </view>
+        
+        <view class="cert-footer">
+          <text class="cert-date">生成时间：{{item.createdAt}}</text>
+          <view class="cert-actions">
+            <view class="action-btn" catchtap="shareCertificate" data-id="{{item.id}}">
+              <text>分享</text>
+            </view>
+            <view class="action-btn primary" catchtap="downloadCertificate" data-id="{{item.id}}">
+              <text>下载</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="safe-bottom"></view>
+  </view>
+
+  <view wx:if="{{showVerifyModal}}" class="modal-overlay" bindtap="hideVerify">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">
+        <text class="modal-title">认定书核验</text>
+        <text class="modal-close" bindtap="hideVerify">×</text>
+      </view>
+      
+      <view class="modal-body">
+        <text class="verify-desc">请输入认定书编号或核验码进行核验</text>
+        
+        <view class="form-item">
+          <input 
+            class="form-input" 
+            value="{{verifyCode}}"
+            bindinput="onVerifyInput"
+            placeholder="请输入核验码"
+            maxlength="12"
+          />
+        </view>
+        
+        <view wx:if="{{verifyResult}}" class="verify-result {{verifyResult.valid ? 'success' : 'error'}}">
+          <text class="result-icon">{{verifyResult.valid ? '✓' : '✗'}}</text>
+          <text class="result-text">{{verifyResult.message || (verifyResult.valid ? '认定书真实有效' : '核验失败')}}</text>
+        </view>
+        
+        <button class="btn btn-primary btn-block" bindtap="doVerify">开始核验</button>
+      </view>
+    </view>
+  </view>
+</view>

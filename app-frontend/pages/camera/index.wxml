@@ -1,0 +1,114 @@
+<view class="camera-page">
+  <canvas 
+    type="2d" 
+    id="watermarkCanvas" 
+    class="watermark-canvas {{canvasHidden ? 'hidden' : ''}}"
+  ></canvas>
+
+  <view wx:if="{{!currentPhoto}}" class="camera-container">
+    <camera
+      device-position="{{frontCamera ? 'front' : 'back'}}"
+      flash="{{flashEnabled ? 'on' : 'off'}}"
+      class="camera"
+      bindready="onCameraReady"
+      binderror="onCameraError"
+    >
+      <cover-view class="camera-overlay">
+        <view wx:if="{{mode === 'plate'}}" class="plate-guide">
+          <view class="guide-frame">
+            <view class="corner top-left"></view>
+            <view class="corner top-right"></view>
+            <view class="corner bottom-left"></view>
+            <view class="corner bottom-right"></view>
+          </view>
+          <text class="guide-text">请将车牌对准取景框</text>
+        </view>
+
+        <view wx:if="{{recognizing}}" class="recognizing-overlay">
+          <view class="recognizing-content">
+            <view class="loading"></view>
+            <text class="recognizing-text">正在识别车牌...</text>
+            <text class="recognizing-timer {{recognizeTimeout ? 'timeout' : ''}}">
+              已用时: {{recognizeTimer}}s
+            </text>
+            <text wx:if="{{recognizeTimeout}}" class="timeout-warning">
+              识别超时，请检查网络或手动输入
+            </text>
+          </view>
+        </view>
+
+        <view class="camera-controls">
+          <view class="control-btn" bindtap="chooseFromAlbum">
+            <text class="control-icon">🖼️</text>
+            <text class="control-text">相册</text>
+          </view>
+          
+          <view class="shutter-btn {{recognizing ? 'disabled' : ''}}" bindtap="takePhoto">
+            <view class="shutter-inner"></view>
+          </view>
+          
+          <view class="control-btn" bindtap="switchCamera">
+            <text class="control-icon">🔄</text>
+            <text class="control-text">翻转</text>
+          </view>
+        </view>
+
+        <view class="top-controls">
+          <view class="top-btn" bindtap="toggleFlash">
+            <text class="top-icon">{{flashEnabled ? '⚡' : '⚡'}}</text>
+          </view>
+        </view>
+
+        <view wx:if="{{mode === 'scene' && photos.length > 0}}" class="photo-count">
+          <text class="count-text">已拍摄 {{photos.length}} 张</text>
+        </view>
+      </cover-view>
+    </camera>
+  </view>
+
+  <view wx:else class="photo-preview-container">
+    <image class="preview-image" src="{{currentPhoto}}" mode="aspectFit"></image>
+    
+    <view class="preview-overlay">
+      <view class="watermark-info" wx:if="{{mode === 'scene'}}">
+        <text class="watermark-label">📍 照片将自动添加水印</text>
+        <text class="watermark-detail">时间: {{new Date().toLocaleString()}}</text>
+      </view>
+      
+      <view class="preview-controls">
+        <view class="preview-btn secondary" bindtap="retakePhoto">
+          <text>重拍</text>
+        </view>
+        <view class="preview-btn primary" bindtap="takePhoto" wx:if="{{mode === 'plate'}}">
+          <text>确认识别</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{mode === 'scene' && photos.length > 0}}" class="photo-list-section">
+    <view class="list-header">
+      <text class="list-title">已拍摄照片 ({{photos.length}})</text>
+      <view class="confirm-btn" bindtap="confirmPhotos">
+        <text>确认使用</text>
+      </view>
+    </view>
+    
+    <scroll-view class="photo-list" scroll-x>
+      <view 
+        wx:for="{{photos}}" 
+        wx:key="index"
+        class="photo-thumb"
+      >
+        <image 
+          class="thumb-image" 
+          src="{{item}}" 
+          mode="aspectFill"
+          bindtap="previewPhoto"
+          data-index="{{index}}"
+        ></image>
+        <view class="thumb-remove" bindtap="removePhoto" data-index="{{index}}">×</view>
+      </view>
+    </scroll-view>
+  </view>
+</view>

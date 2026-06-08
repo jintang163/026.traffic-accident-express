@@ -1,0 +1,137 @@
+<view class="container" wx:if="{{accident}}">
+  <view class="status-bar status-{{accident.status}}">
+    <view class="status-dot"></view>
+    <text class="status-text">{{accident.statusText}}</text>
+    <text class="accident-number">{{accident.accidentNumber}}</text>
+  </view>
+  
+  <view class="section">
+    <view class="section-title">基本信息</view>
+    <view class="info-card">
+      <view class="info-row">
+        <view class="info-label">事故类型</view>
+        <view class="info-value">{{accident.accidentTypeText}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">发生时间</view>
+        <view class="info-value">{{accident.accidentTime}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">发生地点</view>
+        <view class="info-value location">{{accident.location}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">天气状况</view>
+        <view class="info-value">{{accident.weatherText}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">路面情况</view>
+        <view class="info-value">{{accident.roadConditionText}}</view>
+      </view>
+      <view class="info-row desc-row">
+        <view class="info-label">事故描述</view>
+        <view class="info-value">{{accident.description}}</view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-title">车辆信息</view>
+    <view class="vehicle-card" wx:for="{{accident.vehicles}}" wx:for-item="vehicle" wx:key="id">
+      <view class="vehicle-header">
+        <view class="plate-box">
+          <text class="plate-text">{{vehicle.plateNumber}}</text>
+          <text class="plate-color">{{vehicle.plateColor}}</text>
+        </view>
+        <view class="vehicle-type">{{vehicle.vehicleType}}</view>
+      </view>
+      <view class="vehicle-info">
+        <view class="info-row">
+          <view class="info-label">车主</view>
+          <view class="info-value">{{vehicle.ownerName}}</view>
+        </view>
+        <view class="info-row">
+          <view class="info-label">联系电话</view>
+          <view class="info-value">{{vehicle.ownerPhone}}</view>
+        </view>
+        <view class="info-row">
+          <view class="info-label">车辆损失</view>
+          <view class="info-value">{{vehicle.damage}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-title">现场照片</view>
+    <view class="photo-grid">
+      <view class="photo-item" wx:for="{{accident.photos}}" wx:for-item="photo" wx:key="id" data-url="{{photo.url}}" bindtap="previewPhoto">
+        <image src="{{photo.url || 'https://via.placeholder.com/300?text=%E7%8E%B0%E5%9C%BA%E7%85%A7%E7%89%87'}}" mode="aspectFill"></image>
+        <view class="photo-type" wx:if="{{photo.type === 'plate'}}">车牌</view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section" wx:if="{{accident.liability}}">
+    <view class="section-title">责任认定</view>
+    <view class="liability-card">
+      <view class="liability-header">
+        <text class="liability-icon">⚖️</text>
+        <text class="liability-title">责任认定结果</text>
+      </view>
+      <view class="liability-parties">
+        <view class="party-item primary">
+          <view class="party-name">{{accident.liability.primaryParty}}</view>
+          <view class="party-ratio">{{accident.liability.primaryRatio}}% 责任</view>
+        </view>
+        <view class="party-vs">VS</view>
+        <view class="party-item secondary">
+          <view class="party-name">{{accident.liability.secondaryParty}}</view>
+          <view class="party-ratio">{{accident.liability.secondaryRatio}}% 责任</view>
+        </view>
+      </view>
+      <view class="liability-desc">{{accident.liability.description}}</view>
+      <view class="liability-time">认定时间：{{accident.liability.determinedAt}}</view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-title">处理进度</view>
+    <view class="timeline">
+      <view class="timeline-item" wx:for="{{timeline}}" wx:for-item="item" wx:key="title">
+        <view class="timeline-dot {{item.status}}"></view>
+        <view class="timeline-line" wx:if="{{index < timeline.length - 1}}"></view>
+        <view class="timeline-content">
+          <view class="timeline-title">{{item.title}}</view>
+          <view class="timeline-desc">{{item.description}}</view>
+          <view class="timeline-time">{{item.time}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section" wx:if="{{accident.certificate}}">
+    <view class="cert-card" bindtap="goToCertificate">
+      <view class="cert-icon">📄</view>
+      <view class="cert-info">
+        <view class="cert-title">电子认定书已生成</view>
+        <view class="cert-number">{{accident.certificate.certificateNumber}}</view>
+      </view>
+      <view class="cert-arrow">›</view>
+    </view>
+  </view>
+  
+  <view class="bottom-actions">
+    <button class="btn btn-secondary" bindtap="callPolice">
+      <text>📞 联系交警</text>
+    </button>
+    <button class="btn btn-primary" bindtap="goToCertificate" wx:if="{{accident.certificate}}">
+      <text>查看认定书</text>
+    </button>
+  </view>
+</view>
+
+<view class="loading" wx:if="{{loading}}">
+  <view class="loading-spinner"></view>
+  <text>加载中...</text>
+</view>
