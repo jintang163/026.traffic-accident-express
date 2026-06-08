@@ -6,6 +6,7 @@ import { UserModule } from './modules/user/user.module';
 import { AccidentModule } from './modules/accident/accident.module';
 import { OcrModule } from './modules/ocr/ocr.module';
 import { CertificateModule } from './modules/certificate/certificate.module';
+import { EvidenceModule } from './modules/evidence/evidence.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CertificateModule } from './modules/certificate/certificate.module';
     AccidentModule,
     OcrModule,
     CertificateModule,
+    EvidenceModule,
   ],
 })
 export class AppModule {}

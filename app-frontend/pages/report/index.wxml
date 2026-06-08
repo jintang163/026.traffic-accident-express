@@ -1,4 +1,9 @@
 <view class="page">
+  <view wx:if="{{isWeakNetwork}}" class="network-warning">
+    <text class="warning-icon">⚠️</text>
+    <text class="warning-text">当前网络较弱，上传可能较慢，请耐心等待或切换网络</text>
+  </view>
+
   <view class="steps">
     <view 
       wx:for="{{steps}}" 
@@ -423,6 +428,48 @@
         loading="{{submitting}}"
         disabled="{{submitting}}"
       >{{submitting ? '提交中...' : '确认提交'}}</button>
+    </view>
+  </view>
+
+  <view wx:if="{{uploading}}" class="upload-overlay">
+    <view class="upload-modal">
+      <view class="upload-header">
+        <text class="upload-title">📤 正在上传证据</text>
+        <text class="upload-subtitle">正在上传照片至云存储并进行区块链存证...</text>
+      </view>
+
+      <view class="upload-progress-section">
+        <view class="progress-header">
+          <text class="progress-label">总体进度</text>
+          <text class="progress-value">{{overallUploadProgress.toFixed(1)}}%</text>
+        </view>
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{overallUploadProgress}}%;"></view>
+        </view>
+      </view>
+
+      <view class="photo-progress-list">
+        <view 
+          wx:for="{{uploadingPhotos}}" 
+          wx:key="index"
+          class="photo-progress-item"
+        >
+          <text class="photo-index">照片 {{index + 1}}</text>
+          <view class="photo-progress-bar">
+            <view class="photo-progress-fill" style="width: {{item.progress || 0}}%;"></view>
+          </view>
+          <text class="photo-progress-text">{{item.progress ? item.progress.toFixed(0) : 0}}%</text>
+        </view>
+      </view>
+
+      <view class="upload-tips">
+        <text class="tip-text">💡 照片正在进行哈希计算和区块链存证，请勿关闭页面</text>
+        <text class="tip-text" wx:if="{{isWeakNetwork}}">📶 当前网络较弱，上传可能需要更长时间</text>
+      </view>
+
+      <view wx:if="{{uploadError}}" class="upload-error">
+        <text class="error-text">❌ {{uploadError}}</text>
+      </view>
     </view>
   </view>
 </view>

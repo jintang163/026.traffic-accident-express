@@ -3,6 +3,7 @@ const { recognizePlate } = require('../../services/ocr');
 const { submitReport } = require('../../services/accident');
 const { getLocation, getAddressByLatLng } = require('../../utils/location');
 const { addWatermark, addWatermarks, formatDate } = require('../../utils/watermark');
+const evidenceService = require('../../services/evidence.js');
 
 Page({
   data: {
@@ -56,7 +57,17 @@ Page({
     submitResult: null,
     
     gettingLocation: false,
-    recognizing: false
+    recognizing: false,
+    
+    uploadingPhotos: [],
+    uploadProgress: 0,
+    overallUploadProgress: 0,
+    networkInfo: null,
+    isWeakNetwork: false,
+    maxPhotosPerAccident: 8,
+    currentPhotoCount: 0,
+    uploading: false,
+    uploadError: null
   },
 
   onLoad: function (options) {
@@ -66,6 +77,20 @@ Page({
       accidentTime: timeStr
     });
     this.getCurrentLocation();
+    this.checkNetworkSpeed();
+  },
+
+  checkNetworkSpeed: async function () {
+    try {
+      const networkInfo = await evidenceService.checkNetworkSpeed();
+      this.setData({
+        networkInfo,
+        isWeakNetwork: networkInfo.isWeakNetwork
+      });
+      console.log('[Report] 网络检测结果:', networkInfo);
+    } catch (error) {
+      console.warn('[Report] 网络检测失败:', error);
+    }
   },
 
   onShow: function () {
@@ -302,53 +327,107 @@ Page({
     });
   },
 
-  doSubmit: function () {
-    this.setData({ submitting: true });
-    
-    const reportData = {
-      accidentType: this.data.accidentType,
-      accidentTime: this.data.accidentTime,
-      location: this.data.location,
-      latitude: this.data.latitude,
-      longitude: this.data.longitude,
-      description: this.data.description,
-      weather: this.data.weather,
-      roadCondition: this.data.roadCondition,
-      vehicles: this.data.vehicles.map(v => ({
-        plateNumber: v.plateNumber,
-        plateColor: v.plateColor,
-        photo: v.photo
-      })),
-      photos: this.data.photos,
-      platePhotos: this.data.vehicles.filter(v => v.photo).map(v => v.photo),
-      driverA: this.data.driverA,
-      driverB: this.data.driverB
-    };
-    
-    console.log('[Report] 提交数据:', reportData);
-    
-    submitReport(reportData).then((result) => {
+  doSubmit: async function () {
+    this.setData({ 
+      submitting: true,
+      uploading: true,
+      uploadProgress: 0,
+      overallUploadProgress: 0,
+      uploadError: null
+    });
+
+    try {
+      const gpsInfo = {
+        latitude: this.data.latitude,
+        longitude: this.data.longitude,
+        timestamp: new Date().toISOString()
+      };
+
+      const allPhotoPaths = [
+        ...this.data.vehicles.filter(v => v.photo).map(v => v.photo),
+        ...this.data.photos
+      ];
+
+      console.log('[Report] 开始上传证据照片，共', allPhotoPaths.length, '张');
+
+      const uploadResults = await evidenceService.uploadMultiplePhotos(allPhotoPaths, {
+        onPhotoProgress: (index, progress) => {
+          const uploadingPhotos = this.data.uploadingPhotos;
+          uploadingPhotos[index] = { progress };
+          this.setData({ uploadingPhotos });
+        },
+        onOverallProgress: (progress) => {
+          this.setData({ overallUploadProgress: progress });
+        }
+      });
+
+      const successfulUploads = uploadResults.filter(r => r.success);
+      const failedUploads = uploadResults.filter(r => !r.success);
+
+      if (failedUploads.length > 0) {
+        console.warn('[Report] 部分照片上传失败:', failedUploads);
+        if (successfulUploads.length < 3) {
+          throw new Error(`有 ${failedUploads.length} 张照片上传失败，请检查网络后重试`);
+        }
+      }
+
+      console.log('[Report] 证据上传完成，成功', successfulUploads.length, '张');
+
+      const uploadedEvidenceIds = successfulUploads.map(r => r.data.evidenceId);
+
+      const reportData = {
+        accidentType: this.data.accidentType,
+        accidentTime: this.data.accidentTime,
+        location: this.data.location,
+        latitude: this.data.latitude,
+        longitude: this.data.longitude,
+        description: this.data.description,
+        weather: this.data.weather,
+        roadCondition: this.data.roadCondition,
+        vehicles: this.data.vehicles.map((v, i) => ({
+          plateNumber: v.plateNumber,
+          plateColor: v.plateColor,
+          photo: v.photo,
+          evidenceId: i < successfulUploads.length ? successfulUploads[i].data.evidenceId : null
+        })),
+        photos: this.data.photos,
+        platePhotos: this.data.vehicles.filter(v => v.photo).map(v => v.photo),
+        evidenceIds: uploadedEvidenceIds,
+        driverA: this.data.driverA,
+        driverB: this.data.driverB
+      };
+
+      console.log('[Report] 提交报案数据:', reportData);
+
+      const result = await submitReport(reportData);
+
       console.log('[Report] 提交成功:', result);
       this.setData({
         submitting: false,
+        uploading: false,
         submitResult: result,
         currentStep: 4
       });
-      
+
       wx.showToast({
         title: '提交成功',
         icon: 'success'
       });
-    }).catch((err) => {
+
+    } catch (err) {
       console.error('[Report] 提交失败:', err);
-      this.setData({ submitting: false });
-      
+      this.setData({ 
+        submitting: false,
+        uploading: false,
+        uploadError: err.message
+      });
+
       wx.showModal({
         title: '提交失败',
         content: err.message || '网络错误，请稍后重试',
         showCancel: false
       });
-    });
+    }
   },
 
   goToCertificate: function () {
