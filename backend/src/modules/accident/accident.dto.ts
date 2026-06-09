@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsNumber, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsEnum, IsNumber, IsOptional, IsArray, ValidateNested, IsBoolean, Matches, MaxLength, MinLength } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class PlateInfoDto {
@@ -49,10 +49,26 @@ export class VehicleDto {
   ownerName: string;
 
   @IsString()
+  @Matches(/^1[3-9]\d{9}$/, { message: '手机号格式不正确' })
   ownerPhone: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{12,18}$/, { message: '驾驶证号格式不正确' })
+  driverLicenseNo?: string;
 
   @IsString()
   insuranceCompany: string;
+}
+
+export class CollisionPositionDto {
+  @IsArray()
+  @IsString({ each: true })
+  vehicleA: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  vehicleB: string[];
 }
 
 export class CreateAccidentDto {
@@ -86,10 +102,32 @@ export class CreateAccidentDto {
 
   @IsNumber()
   longitude: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CollisionPositionDto)
+  collisionPositions?: CollisionPositionDto;
+
+  @IsBoolean()
+  integrityConfirmed: boolean;
 }
 
 export class DetermineLiabilityDto {
   @IsOptional()
   @IsString()
   officer?: string;
+}
+
+export class SaveDraftDto {
+  @IsOptional()
+  @IsString()
+  draftId?: string;
+
+  @IsOptional()
+  data?: any;
+}
+
+export class DeleteDraftDto {
+  @IsString()
+  draftId: string;
 }

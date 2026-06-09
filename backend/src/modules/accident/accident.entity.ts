@@ -3,7 +3,7 @@ import { VehicleEntity } from './vehicle.entity';
 import { PhotoEntity } from './photo.entity';
 
 export type AccidentStatus = 'pending' | 'processing' | 'completed' | 'rejected';
-export type AccidentType = 'rear_end' | 'side_swipe' | 'head_on' | 'reverse' | 'other';
+export type AccidentType = 'rear_end' | 'side_swipe' | 'head_on' | 'reverse' | 'intersection' | 'other';
 
 @Entity('accidents')
 export class AccidentEntity {
@@ -40,7 +40,7 @@ export class AccidentEntity {
 
   @Column({
     type: 'enum',
-    enum: ['rear_end', 'side_swipe', 'head_on', 'reverse', 'other'],
+    enum: ['rear_end', 'side_swipe', 'head_on', 'reverse', 'intersection', 'other'],
     default: 'other',
   })
   accidentType: AccidentType;
@@ -53,6 +53,15 @@ export class AccidentEntity {
 
   @Column({ length: 20, default: '干燥' })
   roadCondition: string;
+
+  @Column({ type: 'json', nullable: true })
+  collisionPositions: {
+    vehicleA: string[];
+    vehicleB: string[];
+  };
+
+  @Column({ type: 'boolean', default: false })
+  integrityConfirmed: boolean;
 
   @Column({ type: 'json', nullable: true })
   liabilityResult: {

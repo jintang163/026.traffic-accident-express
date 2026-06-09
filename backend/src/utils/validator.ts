@@ -4,6 +4,7 @@ export const getAccidentTypeText = (type: string): string => {
     side_swipe: '剐蹭',
     head_on: '正面碰撞',
     reverse: '倒车事故',
+    intersection: '路口事故',
     other: '其他'
   };
   return typeMap[type] || type;
@@ -35,4 +36,65 @@ export const validatePlateNo = (plateNo: string): boolean => {
 export const validatePhone = (phone: string): boolean => {
   const phoneRegex = /^1[3-9]\d{9}$/;
   return phoneRegex.test(phone);
+};
+
+export const validateDriverLicenseNo = (licenseNo: string): boolean => {
+  if (!licenseNo) return true;
+  const licenseRegex = /^\d{12,18}$/;
+  return licenseRegex.test(licenseNo);
+};
+
+export const validateTimeNotFuture = (timeStr: string): boolean => {
+  if (!timeStr) return false;
+  const inputTime = new Date(timeStr).getTime();
+  if (isNaN(inputTime)) return false;
+  return inputTime <= Date.now();
+};
+
+export const validateAccidentReport = (data: any): { valid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+
+  if (!data.accidentType) {
+    errors.push('事故类型不能为空');
+  }
+
+  if (!data.accidentTime && !data.occurTime) {
+    errors.push('事故时间不能为空');
+  } else {
+    const timeStr = data.accidentTime || data.occurTime;
+    if (!validateTimeNotFuture(timeStr)) {
+      errors.push('事故时间不能晚于当前时间');
+    }
+  }
+
+  if (!data.location) {
+    errors.push('事故地点不能为空');
+  }
+
+  if (!data.integrityConfirmed) {
+    errors.push('必须确认诚信申报承诺');
+  }
+
+  if (data.driverA) {
+    if (!data.driverA.phone || !validatePhone(data.driverA.phone)) {
+      errors.push('A车驾驶员手机号格式不正确');
+    }
+    if (data.driverA.license && !validateDriverLicenseNo(data.driverA.license)) {
+      errors.push('A车驾驶证号格式不正确');
+    }
+  }
+
+  if (data.driverB) {
+    if (!data.driverB.phone || !validatePhone(data.driverB.phone)) {
+      errors.push('B车驾驶员手机号格式不正确');
+    }
+    if (data.driverB.license && !validateDriverLicenseNo(data.driverB.license)) {
+      errors.push('B车驾驶证号格式不正确');
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
 };

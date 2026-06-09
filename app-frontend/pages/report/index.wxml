@@ -154,15 +154,29 @@
 
         <view class="form-item">
           <text class="form-label form-label-required">事故时间</text>
-          <picker 
-            mode="multiSelector"
-            value="{{[0,0,0,0,0]}}"
-            bindchange="onTimeChange"
-          >
-            <view class="form-input picker-input">
-              {{accidentTime}}
-            </view>
-          </picker>
+          <view class="datetime-row">
+            <picker 
+              mode="date"
+              value="{{accidentDate}}"
+              start="2020-01-01"
+              end="{{accidentDate}}"
+              bindchange="onDateChange"
+            >
+              <view class="form-input picker-input datetime-input">
+                {{accidentDate}}
+              </view>
+            </picker>
+            <picker 
+              mode="time"
+              value="{{accidentTime ? accidentTime.split(' ')[1] : ''}}"
+              bindchange="onTimeChange"
+            >
+              <view class="form-input picker-input datetime-input">
+                {{accidentTime ? accidentTime.split(' ')[1] : '选择时间'}}
+              </view>
+            </picker>
+          </view>
+          <text wx:if="{{timeError}}" class="form-error">{{timeError}}</text>
         </view>
 
         <view class="form-item">
@@ -218,6 +232,102 @@
 
       <view class="card">
         <view class="step-title">
+          <text class="step-icon">💥</text>
+          <text class="step-title-text">碰撞位置</text>
+        </view>
+        <text class="step-desc">请勾选双方车辆的碰撞部位，帮助判定事故责任</text>
+
+        <view class="collision-section">
+          <view class="collision-vehicle">
+            <text class="collision-vehicle-label">A车（我方）</text>
+            <view class="collision-diagram">
+              <view class="car-sketch">
+                <view 
+                  class="car-part car-front {{collisionPositions.vehicleA.indexOf('front') > -1 ? 'car-part-active' : ''}}"
+                  bindtap="onCollisionToggle"
+                  data-vehicle="vehicleA"
+                  data-position="front"
+                >
+                  <text class="car-part-label">车头</text>
+                </view>
+                <view class="car-middle">
+                  <view 
+                    class="car-side car-left {{collisionPositions.vehicleA.indexOf('left') > -1 ? 'car-part-active' : ''}}"
+                    bindtap="onCollisionToggle"
+                    data-vehicle="vehicleA"
+                    data-position="left"
+                  >
+                    <text class="car-part-label">左侧</text>
+                  </view>
+                  <view class="car-center">A车</view>
+                  <view 
+                    class="car-side car-right {{collisionPositions.vehicleA.indexOf('right') > -1 ? 'car-part-active' : ''}}"
+                    bindtap="onCollisionToggle"
+                    data-vehicle="vehicleA"
+                    data-position="right"
+                  >
+                    <text class="car-part-label">右侧</text>
+                  </view>
+                </view>
+                <view 
+                  class="car-part car-rear {{collisionPositions.vehicleA.indexOf('rear') > -1 ? 'car-part-active' : ''}}"
+                  bindtap="onCollisionToggle"
+                  data-vehicle="vehicleA"
+                  data-position="rear"
+                >
+                  <text class="car-part-label">车尾</text>
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <view class="collision-vehicle">
+            <text class="collision-vehicle-label">B车（对方）</text>
+            <view class="collision-diagram">
+              <view class="car-sketch">
+                <view 
+                  class="car-part car-front {{collisionPositions.vehicleB.indexOf('front') > -1 ? 'car-part-active' : ''}}"
+                  bindtap="onCollisionToggle"
+                  data-vehicle="vehicleB"
+                  data-position="front"
+                >
+                  <text class="car-part-label">车头</text>
+                </view>
+                <view class="car-middle">
+                  <view 
+                    class="car-side car-left {{collisionPositions.vehicleB.indexOf('left') > -1 ? 'car-part-active' : ''}}"
+                    bindtap="onCollisionToggle"
+                    data-vehicle="vehicleB"
+                    data-position="left"
+                  >
+                    <text class="car-part-label">左侧</text>
+                  </view>
+                  <view class="car-center">B车</view>
+                  <view 
+                    class="car-side car-right {{collisionPositions.vehicleB.indexOf('right') > -1 ? 'car-part-active' : ''}}"
+                    bindtap="onCollisionToggle"
+                    data-vehicle="vehicleB"
+                    data-position="right"
+                  >
+                    <text class="car-part-label">右侧</text>
+                  </view>
+                </view>
+                <view 
+                  class="car-part car-rear {{collisionPositions.vehicleB.indexOf('rear') > -1 ? 'car-part-active' : ''}}"
+                  bindtap="onCollisionToggle"
+                  data-vehicle="vehicleB"
+                  data-position="rear"
+                >
+                  <text class="car-part-label">车尾</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="step-title">
           <text class="step-icon">👤</text>
           <text class="step-title-text">A车驾驶员（我方）</text>
         </view>
@@ -236,16 +346,25 @@
         
         <view class="form-item">
           <text class="form-label form-label-required">联系电话</text>
-          <input 
-            class="form-input" 
-            type="number"
-            value="{{driverA.phone}}"
-            bindinput="onDriverInput"
-            data-vehicle="A"
-            data-field="phone"
-            placeholder="请输入联系电话"
-            maxlength="11"
-          />
+          <view class="phone-row">
+            <input 
+              class="form-input flex-1" 
+              type="number"
+              value="{{driverA.phone}}"
+              bindinput="onDriverInput"
+              data-vehicle="A"
+              data-field="phone"
+              placeholder="请输入联系电话"
+              maxlength="11"
+            />
+            <button 
+              class="wechat-phone-btn" 
+              open-type="getPhoneNumber"
+              bindgetphonenumber="onGetWechatPhone"
+              data-vehicle="A"
+            >微信获取</button>
+          </view>
+          <text wx:if="{{phoneErrors.A}}" class="form-error">{{phoneErrors.A}}</text>
         </view>
         
         <view class="form-item">
@@ -257,7 +376,9 @@
             data-vehicle="A"
             data-field="license"
             placeholder="请输入驾驶证号（可选）"
+            maxlength="18"
           />
+          <text wx:if="{{licenseErrors.A}}" class="form-error">{{licenseErrors.A}}</text>
         </view>
       </view>
 
@@ -281,16 +402,25 @@
         
         <view class="form-item">
           <text class="form-label form-label-required">联系电话</text>
-          <input 
-            class="form-input" 
-            type="number"
-            value="{{driverB.phone}}"
-            bindinput="onDriverInput"
-            data-vehicle="B"
-            data-field="phone"
-            placeholder="请输入联系电话"
-            maxlength="11"
-          />
+          <view class="phone-row">
+            <input 
+              class="form-input flex-1" 
+              type="number"
+              value="{{driverB.phone}}"
+              bindinput="onDriverInput"
+              data-vehicle="B"
+              data-field="phone"
+              placeholder="请输入联系电话"
+              maxlength="11"
+            />
+            <button 
+              class="wechat-phone-btn" 
+              open-type="getPhoneNumber"
+              bindgetphonenumber="onGetWechatPhone"
+              data-vehicle="B"
+            >微信获取</button>
+          </view>
+          <text wx:if="{{phoneErrors.B}}" class="form-error">{{phoneErrors.B}}</text>
         </view>
         
         <view class="form-item">
@@ -302,7 +432,9 @@
             data-vehicle="B"
             data-field="license"
             placeholder="请输入驾驶证号（可选）"
+            maxlength="18"
           />
+          <text wx:if="{{licenseErrors.B}}" class="form-error">{{licenseErrors.B}}</text>
         </view>
       </view>
     </view>
@@ -347,9 +479,35 @@
             <text class="summary-label">天气/路面：</text>
             <text class="summary-value">{{weather}} / {{roadCondition}}</text>
           </view>
+          <view class="summary-row">
+            <text class="summary-label">碰撞位置：</text>
+            <text class="summary-value">A车: {{collisionPositions.vehicleA.join('、') || '-'}} | B车: {{collisionPositions.vehicleB.join('、') || '-'}}</text>
+          </view>
           <view class="summary-row" wx:if="{{description}}">
             <text class="summary-label">事故描述：</text>
             <text class="summary-value">{{description}}</text>
+          </view>
+        </view>
+
+        <view class="divider"></view>
+
+        <view class="summary-section">
+          <view class="summary-title">驾驶员信息</view>
+          <view class="summary-row">
+            <text class="summary-label">A车驾驶员：</text>
+            <text class="summary-value">{{driverA.name}} {{driverA.phone}}</text>
+          </view>
+          <view class="summary-row" wx:if="{{driverA.license}}">
+            <text class="summary-label">A车驾照：</text>
+            <text class="summary-value">{{driverA.license}}</text>
+          </view>
+          <view class="summary-row">
+            <text class="summary-label">B车驾驶员：</text>
+            <text class="summary-value">{{driverB.name}} {{driverB.phone}}</text>
+          </view>
+          <view class="summary-row" wx:if="{{driverB.license}}">
+            <text class="summary-label">B车驾照：</text>
+            <text class="summary-value">{{driverB.license}}</text>
           </view>
         </view>
 
@@ -366,6 +524,20 @@
               mode="aspectFill"
             />
           </scroll-view>
+        </view>
+      </view>
+
+      <view class="card integrity-card">
+        <view class="integrity-header">
+          <checkbox-group bindchange="onIntegrityChange">
+            <label class="integrity-checkbox-label">
+              <checkbox checked="{{integrityConfirmed}}" color="#1E5EFA" />
+              <text class="integrity-checkbox-text">诚信申报承诺</text>
+            </label>
+          </checkbox-group>
+        </view>
+        <view class="integrity-body">
+          <text class="integrity-text">{{integrityText}}</text>
         </view>
       </view>
 
@@ -426,8 +598,11 @@
         class="btn btn-primary flex-1" 
         bindtap="submit"
         loading="{{submitting}}"
-        disabled="{{submitting}}"
+        disabled="{{submitting || !integrityConfirmed}}"
       >{{submitting ? '提交中...' : '确认提交'}}</button>
+    </view>
+    <view wx:if="{{draftLastSaved}}" class="draft-info">
+      <text class="draft-text">草稿已保存 {{draftLastSaved}}</text>
     </view>
   </view>
 

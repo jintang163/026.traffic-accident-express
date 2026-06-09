@@ -300,6 +300,15 @@
   gap: 16rpx;
 }
 
+.datetime-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.datetime-input {
+  flex: 1;
+}
+
 .location-input {
   display: flex;
   gap: 16rpx;
@@ -314,6 +323,173 @@
   align-items: center;
   justify-content: center;
   font-size: 36rpx;
+}
+
+.form-error {
+  font-size: 24rpx;
+  color: #F53F3F;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.phone-row {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+}
+
+.wechat-phone-btn {
+  flex-shrink: 0;
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0 24rpx;
+  background: linear-gradient(135deg, #07C160 0%, #06AD56 100%);
+  color: #FFFFFF;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.wechat-phone-btn::after {
+  border: none;
+}
+
+.collision-section {
+  display: flex;
+  gap: 32rpx;
+  justify-content: space-between;
+}
+
+.collision-vehicle {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.collision-vehicle-label {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #4E5969;
+  margin-bottom: 16rpx;
+}
+
+.collision-diagram {
+  width: 100%;
+}
+
+.car-sketch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2rpx solid #E5E6EB;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background-color: #F7F8FA;
+}
+
+.car-part {
+  width: 100%;
+  padding: 16rpx 0;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.car-front {
+  border-bottom: 2rpx dashed #E5E6EB;
+}
+
+.car-rear {
+  border-top: 2rpx dashed #E5E6EB;
+}
+
+.car-part-active {
+  background-color: #FFECE8;
+}
+
+.car-part-active .car-part-label {
+  color: #F53F3F;
+  font-weight: 600;
+}
+
+.car-part-label {
+  font-size: 24rpx;
+  color: #86909C;
+}
+
+.car-middle {
+  display: flex;
+  width: 100%;
+  border-bottom: none;
+}
+
+.car-side {
+  flex: 1;
+  padding: 20rpx 0;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.car-left {
+  border-right: 2rpx dashed #E5E6EB;
+}
+
+.car-right {
+  border-left: 2rpx dashed #E5E6EB;
+}
+
+.car-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #86909C;
+  font-weight: 500;
+  padding: 20rpx 0;
+}
+
+.integrity-card {
+  border: 2rpx solid #1E5EFA;
+  background-color: #F0F5FF;
+}
+
+.integrity-header {
+  margin-bottom: 16rpx;
+}
+
+.integrity-checkbox-label {
+  display: flex;
+  align-items: center;
+}
+
+.integrity-checkbox-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1E5EFA;
+  margin-left: 12rpx;
+}
+
+.integrity-body {
+  padding-left: 4rpx;
+}
+
+.integrity-text {
+  font-size: 26rpx;
+  color: #4E5969;
+  line-height: 1.8;
+}
+
+.draft-info {
+  text-align: center;
+  margin-top: 12rpx;
+}
+
+.draft-text {
+  font-size: 22rpx;
+  color: #86909C;
 }
 
 .summary-section {

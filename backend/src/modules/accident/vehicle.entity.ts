@@ -34,6 +34,9 @@ export class VehicleEntity {
   @Column({ length: 20, nullable: true })
   ownerPhone: string;
 
+  @Column({ length: 30, nullable: true })
+  driverLicenseNo: string;
+
   @Column({ length: 100, nullable: true })
   insuranceCompany: string;
 

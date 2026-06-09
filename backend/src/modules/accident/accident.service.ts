@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as dayjs from 'dayjs';
@@ -6,10 +6,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { AccidentEntity, AccidentStatus, AccidentType } from './accident.entity';
 import { VehicleEntity } from './vehicle.entity';
 import { PhotoEntity } from './photo.entity';
-import { CreateAccidentDto, DetermineLiabilityDto } from './accident.dto';
+import { CreateAccidentDto, DetermineLiabilityDto, SaveDraftDto } from './accident.dto';
+import { validateAccidentReport } from '../../utils/validator';
+
+const DRAFT_KEY_PREFIX = 'draft:accident:';
+const DRAFT_TTL_SECONDS = 86400;
 
 @Injectable()
 export class AccidentService {
+  private draftStore: Map<string, { data: any; expiresAt: number }> = new Map();
+
   constructor(
     @InjectRepository(AccidentEntity)
     private accidentRepository: Repository<AccidentEntity>,
@@ -21,9 +27,13 @@ export class AccidentService {
 
   async create(dto: CreateAccidentDto, userId?: string): Promise<AccidentEntity> {
     console.log('[AccidentService] 创建事故报案:', dto);
-    
+
+    if (!dto.integrityConfirmed) {
+      throw new BadRequestException('必须确认诚信申报承诺后才能提交');
+    }
+
     const reportNo = this.generateReportNo();
-    
+
     const accident = this.accidentRepository.create({
       reportNo,
       status: 'pending',
@@ -35,11 +45,13 @@ export class AccidentService {
       description: dto.description,
       weather: dto.weather,
       roadCondition: dto.roadCondition,
+      collisionPositions: dto.collisionPositions || null,
+      integrityConfirmed: dto.integrityConfirmed,
       createdBy: userId,
     });
-    
+
     const savedAccident = await this.accidentRepository.save(accident);
-    
+
     for (let i = 0; i < dto.vehicles.length; i++) {
       const vehicleDto = dto.vehicles[i];
       const vehicle = this.vehicleRepository.create({
@@ -51,12 +63,13 @@ export class AccidentService {
         platePhotoUrl: vehicleDto.platePhoto?.url,
         ownerName: vehicleDto.ownerName,
         ownerPhone: vehicleDto.ownerPhone,
+        driverLicenseNo: vehicleDto.driverLicenseNo || null,
         insuranceCompany: vehicleDto.insuranceCompany,
         vehicleOrder: i + 1,
       });
       await this.vehicleRepository.save(vehicle);
     }
-    
+
     for (const photoDto of dto.scenePhotos) {
       const photo = this.photoRepository.create({
         accidentId: savedAccident.id,
@@ -67,10 +80,10 @@ export class AccidentService {
       });
       await this.photoRepository.save(photo);
     }
-    
+
     savedAccident.status = 'processing';
     await this.accidentRepository.save(savedAccident);
-    
+
     console.log('[AccidentService] 事故报案创建成功:', savedAccident.id);
     return this.findOne(savedAccident.id);
   }
@@ -82,26 +95,26 @@ export class AccidentService {
     userId?: string;
   }): Promise<{ list: AccidentEntity[]; total: number }> {
     const { page = 1, pageSize = 10, status, userId } = params || {};
-    
+
     const queryBuilder = this.accidentRepository
       .createQueryBuilder('accident')
       .leftJoinAndSelect('accident.vehicles', 'vehicles')
       .leftJoinAndSelect('accident.scenePhotos', 'scenePhotos')
       .orderBy('accident.createdAt', 'DESC');
-    
+
     if (status) {
       queryBuilder.andWhere('accident.status = :status', { status });
     }
-    
+
     if (userId) {
       queryBuilder.andWhere('accident.createdBy = :userId', { userId });
     }
-    
+
     const [list, total] = await queryBuilder
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .getManyAndCount();
-    
+
     return { list, total };
   }
 
@@ -110,11 +123,11 @@ export class AccidentService {
       where: { id },
       relations: ['vehicles', 'scenePhotos'],
     });
-    
+
     if (!accident) {
       throw new NotFoundException(`事故记录 ${id} 不存在`);
     }
-    
+
     return accident;
   }
 
@@ -123,24 +136,24 @@ export class AccidentService {
     dto: DetermineLiabilityDto,
   ): Promise<AccidentEntity> {
     console.log('[AccidentService] 责任判定:', accidentId);
-    
+
     const accident = await this.findOne(accidentId);
-    
+
     const liabilityResult = this.calculateLiability(accident);
-    
+
     accident.liabilityResult = {
       ...liabilityResult,
       determinedAt: new Date(),
       officer: dto.officer || '系统自动判定',
     };
     accident.status = 'completed';
-    
+
     return await this.accidentRepository.save(accident);
   }
 
   private calculateLiability(accident: AccidentEntity) {
     const { accidentType, vehicles } = accident;
-    
+
     if (vehicles.length < 2) {
       return {
         primaryParty: vehicles[0]?.plateNo || '',
@@ -150,10 +163,10 @@ export class AccidentService {
         liabilityDescription: '单方事故，驾驶员承担全部责任',
       };
     }
-    
+
     const primaryVehicle = vehicles[1] || vehicles[0];
     const secondaryVehicle = vehicles[0];
-    
+
     const liabilityRules: Record<string, { primary: number; secondary: number; description: string }> = {
       rear_end: {
         primary: 100,
@@ -175,15 +188,20 @@ export class AccidentService {
         secondary: 0,
         description: '倒车车辆未查明车后情况，负全部责任',
       },
+      intersection: {
+        primary: 60,
+        secondary: 40,
+        description: '未让行车辆负主要责任，另一方负次要责任',
+      },
       other: {
         primary: 50,
         secondary: 50,
         description: '事故责任需进一步调查，暂按同等责任处理',
       },
     };
-    
+
     const rule = liabilityRules[accidentType] || liabilityRules.other;
-    
+
     return {
       primaryParty: primaryVehicle.plateNo,
       secondaryParty: secondaryVehicle.plateNo,
@@ -191,6 +209,42 @@ export class AccidentService {
       secondaryLiability: rule.secondary,
       liabilityDescription: rule.description,
     };
+  }
+
+  async saveDraft(dto: SaveDraftDto, userId?: string): Promise<{ draftId: string }> {
+    const draftId = dto.draftId || uuidv4();
+    const key = DRAFT_KEY_PREFIX + (userId || 'anonymous') + ':' + draftId;
+
+    this.draftStore.set(key, {
+      data: dto.data || {},
+      expiresAt: Date.now() + DRAFT_TTL_SECONDS * 1000,
+    });
+
+    console.log('[AccidentService] 草稿保存成功:', draftId);
+    return { draftId };
+  }
+
+  async getDraft(userId?: string): Promise<{ draftId: string; data: any } | null> {
+    const prefix = DRAFT_KEY_PREFIX + (userId || 'anonymous') + ':';
+
+    for (const [key, value] of this.draftStore.entries()) {
+      if (key.startsWith(prefix)) {
+        if (value.expiresAt > Date.now()) {
+          const draftId = key.replace(prefix, '');
+          return { draftId, data: value.data };
+        } else {
+          this.draftStore.delete(key);
+        }
+      }
+    }
+
+    return null;
+  }
+
+  async deleteDraft(draftId: string, userId?: string): Promise<void> {
+    const key = DRAFT_KEY_PREFIX + (userId || 'anonymous') + ':' + draftId;
+    this.draftStore.delete(key);
+    console.log('[AccidentService] 草稿已删除:', draftId);
   }
 
   async updateStatus(id: string, status: AccidentStatus): Promise<AccidentEntity> {
