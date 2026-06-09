@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Post, Body, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
@@ -54,6 +54,33 @@ export class OcrController {
       };
     } catch (error) {
       console.error('[OcrController] 车牌识别失败:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '识别失败',
+        requestId: `req_${Date.now()}`,
+      };
+    }
+  }
+
+  @Post('plate-url')
+  async recognizePlateByUrl(@Body('imageUrl') imageUrl: string) {
+    console.log('[OcrController] 收到URL车牌识别请求:', imageUrl);
+    
+    const startTime = Date.now();
+    
+    try {
+      const result = await this.ocrService.recognizePlateByUrl(imageUrl);
+      
+      const duration = Date.now() - startTime;
+      console.log('[OcrController] URL车牌识别完成，耗时:', duration, 'ms');
+      
+      return {
+        success: true,
+        data: result,
+        requestId: `req_${Date.now()}`,
+      };
+    } catch (error) {
+      console.error('[OcrController] URL车牌识别失败:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : '识别失败',

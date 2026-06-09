@@ -29,4 +29,15 @@ export class AuthController {
       message: '登录成功',
     };
   }
+
+  @Post('wechat-phone')
+  async getWechatPhone(@Body('code') code: string) {
+    const phoneNumber = await this.authService.getWechatPhoneNumber(code);
+    
+    return {
+      success: true,
+      data: { phoneNumber },
+      message: '手机号获取成功',
+    };
+  }
 }

@@ -169,6 +169,38 @@ export class CertificateService {
     return { url: certificate.pdfUrl };
   }
 
+  async getStatistics(userId?: string): Promise<{ total: number; issued: number; verified: number; revoked: number }> {
+    const queryBuilder = this.certificateRepository.createQueryBuilder('certificate');
+
+    if (userId) {
+      queryBuilder.andWhere('certificate.createdBy = :userId', { userId });
+    }
+
+    const total = await queryBuilder.getCount();
+
+    const issued = await this.certificateRepository.count({
+      where: { status: 'issued', ...(userId ? { createdBy: userId } : {}) },
+    });
+
+    const verified = await this.certificateRepository.count({
+      where: { status: 'verified', ...(userId ? { createdBy: userId } : {}) },
+    });
+
+    const revoked = await this.certificateRepository.count({
+      where: { status: 'revoked', ...(userId ? { createdBy: userId } : {}) },
+    });
+
+    return { total, issued, verified, revoked };
+  }
+
+  async send(id: string, phone: string): Promise<{ success: boolean }> {
+    const certificate = await this.findOne(id);
+    
+    console.log('[CertificateService] 发送认定书到手机:', phone, '认定书号:', certificate.certificateNo);
+    
+    return { success: true };
+  }
+
   private generateCertificateNo(): string {
     const prefix = 'RD' + dayjs().format('YYYYMMDD');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');

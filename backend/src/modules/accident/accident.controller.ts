@@ -66,6 +66,18 @@ export class AccidentController {
     };
   }
 
+  @Get('statistics')
+  async getStatistics(@Request() req) {
+    const userId = req.user?.id;
+    const stats = await this.accidentService.getStatistics(userId);
+
+    return {
+      success: true,
+      data: stats,
+      message: '获取成功',
+    };
+  }
+
   @Post('draft')
   async saveDraft(@Body() dto: SaveDraftDto, @Request() req) {
     const userId = req.user?.id;

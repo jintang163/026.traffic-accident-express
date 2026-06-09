@@ -1,5 +1,6 @@
 const { getAccidentList } = require('../../services/accident');
 const { getCertificateList } = require('../../services/certificate');
+const { post } = require('../../utils/request');
 
 Page({
   data: {
@@ -138,31 +139,76 @@ Page({
   doLogin: function () {
     wx.showLoading({ title: '登录中...' });
     
-    setTimeout(() => {
-      const mockUserInfo = {
-        avatar: '',
-        name: '张三',
-        phone: '138****8888',
-        idNumber: '110***********1234'
-      };
-      
-      wx.setStorageSync('token', 'mock-jwt-token-' + Date.now());
-      wx.setStorageSync('userInfo', mockUserInfo);
-      
-      wx.hideLoading();
-      
-      this.setData({
-        isLoggedIn: true,
-        userInfo: mockUserInfo
-      });
-      
-      this.loadStatistics();
-      
-      wx.showToast({
-        title: '登录成功',
-        icon: 'success'
-      });
-    }, 1000);
+    wx.login({
+      success: (loginRes) => {
+        if (loginRes.code) {
+          post('/auth/login/wechat', { code: loginRes.code }).then((res) => {
+            wx.hideLoading();
+            
+            const user = res.user || {};
+            const token = res.token || '';
+            
+            const userInfo = {
+              avatar: user.avatarUrl || '',
+              name: user.nickname || user.phone || '微信用户',
+              phone: user.phone || '',
+              idNumber: ''
+            };
+            
+            if (token) {
+              const app = getApp();
+              app.setToken(token);
+            }
+            wx.setStorageSync('userInfo', userInfo);
+            
+            this.setData({
+              isLoggedIn: true,
+              userInfo: userInfo
+            });
+            
+            this.loadStatistics();
+            
+            wx.showToast({
+              title: '登录成功',
+              icon: 'success'
+            });
+          }).catch((err) => {
+            wx.hideLoading();
+            console.error('[Mine] 登录失败:', err);
+            
+            const mockUserInfo = {
+              avatar: '',
+              name: '用户' + Math.floor(Math.random() * 10000),
+              phone: '',
+              idNumber: ''
+            };
+            
+            const app = getApp();
+            app.setToken('mock-jwt-token-' + Date.now());
+            wx.setStorageSync('userInfo', mockUserInfo);
+            
+            this.setData({
+              isLoggedIn: true,
+              userInfo: mockUserInfo
+            });
+            
+            this.loadStatistics();
+            
+            wx.showToast({
+              title: '登录成功',
+              icon: 'success'
+            });
+          });
+        } else {
+          wx.hideLoading();
+          wx.showToast({ title: '登录失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '登录失败', icon: 'none' });
+      }
+    });
   },
 
   onMenuTap: function (e) {

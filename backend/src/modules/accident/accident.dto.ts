@@ -45,20 +45,21 @@ export class VehicleDto {
   @Type(() => PhotoInfoDto)
   platePhoto?: PhotoInfoDto;
 
+  @IsOptional()
   @IsString()
-  ownerName: string;
-
-  @IsString()
-  @Matches(/^1[3-9]\d{9}$/, { message: '手机号格式不正确' })
-  ownerPhone: string;
+  ownerName?: string;
 
   @IsOptional()
   @IsString()
-  @Matches(/^\d{12,18}$/, { message: '驾驶证号格式不正确' })
+  ownerPhone?: string;
+
+  @IsOptional()
+  @IsString()
   driverLicenseNo?: string;
 
+  @IsOptional()
   @IsString()
-  insuranceCompany: string;
+  insuranceCompany?: string;
 }
 
 export class CollisionPositionDto {
@@ -77,22 +78,30 @@ export class CreateAccidentDto {
   @Type(() => VehicleDto)
   vehicles: VehicleDto[];
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PhotoInfoDto)
-  scenePhotos: PhotoInfoDto[];
+  scenePhotos?: PhotoInfoDto[];
 
   @IsString()
   accidentType: string;
 
+  @IsOptional()
   @IsString()
-  description: string;
+  accidentTime?: string;
 
+  @IsOptional()
   @IsString()
-  weather: string;
+  description?: string;
 
+  @IsOptional()
   @IsString()
-  roadCondition: string;
+  weather?: string;
+
+  @IsOptional()
+  @IsString()
+  roadCondition?: string;
 
   @IsString()
   location: string;

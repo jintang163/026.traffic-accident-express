@@ -50,6 +50,25 @@ function submitReport(data) {
   
   return new Promise(async (resolve, reject) => {
     try {
+      const vehicles = (data.vehicles || []).map((v, i) => ({
+        plateInfo: {
+          plateNo: v.plateNumber || v.plateNo || '',
+          plateColor: v.plateColor || '蓝',
+          vehicleType: v.vehicleType || '小型汽车',
+          confidence: v.confidence || 0,
+        },
+        platePhoto: v.photo ? { url: v.photo, type: 'plate' } : undefined,
+        ownerName: i === 0 ? (data.driverA?.name || '') : (data.driverB?.name || ''),
+        ownerPhone: i === 0 ? (data.driverA?.phone || '') : (data.driverB?.phone || ''),
+        driverLicenseNo: i === 0 ? (data.driverA?.license || '') : (data.driverB?.license || ''),
+        insuranceCompany: v.insuranceCompany || '',
+      }));
+
+      const scenePhotos = (data.photos || []).map((url) => ({
+        url,
+        type: 'scene',
+      }));
+
       const reportData = {
         accidentType: data.accidentType,
         accidentTime: data.accidentTime,
@@ -59,32 +78,21 @@ function submitReport(data) {
         description: data.description,
         weather: data.weather,
         roadCondition: data.roadCondition,
-        vehicles: data.vehicles || [],
-        driverA: data.driverA,
-        driverB: data.driverB
+        vehicles,
+        scenePhotos,
+        collisionPositions: data.collisionPositions || null,
+        integrityConfirmed: data.integrityConfirmed || false,
       };
       
       console.log('[Accident] Step1: 创建事故记录');
       const accident = await createAccident(reportData);
       console.log('[Accident] 事故记录创建成功:', accident.id);
       
-      if (data.photos && data.photos.length > 0) {
-        console.log('[Accident] Step2: 上传现场照片, 共', data.photos.length, '张');
-        await uploadPhotos(data.photos, accident.id, 'scene');
-        console.log('[Accident] 现场照片上传完成');
-      }
-      
-      if (data.platePhotos && data.platePhotos.length > 0) {
-        console.log('[Accident] Step3: 上传车牌照片, 共', data.platePhotos.length, '张');
-        await uploadPhotos(data.platePhotos, accident.id, 'plate');
-        console.log('[Accident] 车牌照片上传完成');
-      }
-      
-      console.log('[Accident] Step4: 自动责任判定');
+      console.log('[Accident] Step2: 自动责任判定');
       const liabilityResult = await determineLiability(accident.id);
       console.log('[Accident] 责任判定完成:', liabilityResult);
       
-      console.log('[Accident] Step5: 生成电子认定书');
+      console.log('[Accident] Step3: 生成电子认定书');
       const certificate = await generateCertificate(accident.id);
       console.log('[Accident] 认定书生成完成:', certificate.id);
       

@@ -37,14 +37,14 @@ export class AccidentService {
     const accident = this.accidentRepository.create({
       reportNo,
       status: 'pending',
-      occurTime: new Date(),
+      occurTime: dto.accidentTime ? new Date(dto.accidentTime) : new Date(),
       location: dto.location,
       latitude: dto.latitude,
       longitude: dto.longitude,
       accidentType: dto.accidentType as AccidentType,
-      description: dto.description,
-      weather: dto.weather,
-      roadCondition: dto.roadCondition,
+      description: dto.description || '',
+      weather: dto.weather || '晴',
+      roadCondition: dto.roadCondition || '干燥',
       collisionPositions: dto.collisionPositions || null,
       integrityConfirmed: dto.integrityConfirmed,
       createdBy: userId,
@@ -61,16 +61,16 @@ export class AccidentService {
         vehicleType: vehicleDto.plateInfo.vehicleType,
         confidence: vehicleDto.plateInfo.confidence,
         platePhotoUrl: vehicleDto.platePhoto?.url,
-        ownerName: vehicleDto.ownerName,
-        ownerPhone: vehicleDto.ownerPhone,
+        ownerName: vehicleDto.ownerName || null,
+        ownerPhone: vehicleDto.ownerPhone || null,
         driverLicenseNo: vehicleDto.driverLicenseNo || null,
-        insuranceCompany: vehicleDto.insuranceCompany,
+        insuranceCompany: vehicleDto.insuranceCompany || null,
         vehicleOrder: i + 1,
       });
       await this.vehicleRepository.save(vehicle);
     }
 
-    for (const photoDto of dto.scenePhotos) {
+    for (const photoDto of (dto.scenePhotos || [])) {
       const photo = this.photoRepository.create({
         accidentId: savedAccident.id,
         type: photoDto.type,
@@ -251,6 +251,30 @@ export class AccidentService {
     const accident = await this.findOne(id);
     accident.status = status;
     return await this.accidentRepository.save(accident);
+  }
+
+  async getStatistics(userId?: string): Promise<{ total: number; pending: number; processing: number; completed: number }> {
+    const queryBuilder = this.accidentRepository.createQueryBuilder('accident');
+
+    if (userId) {
+      queryBuilder.andWhere('accident.createdBy = :userId', { userId });
+    }
+
+    const total = await queryBuilder.getCount();
+
+    const pending = await this.accidentRepository.count({
+      where: { status: 'pending', ...(userId ? { createdBy: userId } : {}) },
+    });
+
+    const processing = await this.accidentRepository.count({
+      where: { status: 'processing', ...(userId ? { createdBy: userId } : {}) },
+    });
+
+    const completed = await this.accidentRepository.count({
+      where: { status: 'completed', ...(userId ? { createdBy: userId } : {}) },
+    });
+
+    return { total, pending, processing, completed };
   }
 
   private generateReportNo(): string {

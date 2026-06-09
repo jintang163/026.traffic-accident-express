@@ -32,6 +32,34 @@ export class CertificateController {
     };
   }
 
+  @Get('statistics')
+  async getStatistics(@Request() req) {
+    const userId = req.user?.id;
+    const stats = await this.certificateService.getStatistics(userId);
+    
+    return {
+      success: true,
+      data: stats,
+      message: '获取成功',
+    };
+  }
+
+  @Post('verify')
+  async verify(
+    @Body('certificateNumber') certificateNumber: string,
+    @Body('certificateNo') certificateNo: string,
+    @Body('verifyCode') verifyCode: string,
+  ) {
+    const no = certificateNumber || certificateNo;
+    const valid = await this.certificateService.verify(no, verifyCode);
+    
+    return {
+      success: true,
+      data: { valid },
+      message: valid ? '核验通过' : '核验失败',
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const certificate = await this.certificateService.findOne(id);
@@ -40,20 +68,6 @@ export class CertificateController {
       success: true,
       data: certificate,
       message: '获取成功',
-    };
-  }
-
-  @Post('verify')
-  async verify(
-    @Body('certificateNo') certificateNo: string,
-    @Body('verifyCode') verifyCode: string,
-  ) {
-    const valid = await this.certificateService.verify(certificateNo, verifyCode);
-    
-    return {
-      success: true,
-      data: { valid },
-      message: valid ? '核验通过' : '核验失败',
     };
   }
 
@@ -76,6 +90,31 @@ export class CertificateController {
       success: true,
       data: result,
       message: '下载链接生成成功',
+    };
+  }
+
+  @Get(':id/print')
+  async print(@Param('id') id: string) {
+    const result = await this.certificateService.download(id);
+    
+    return {
+      success: true,
+      data: result,
+      message: '打印数据获取成功',
+    };
+  }
+
+  @Post(':id/send')
+  async send(
+    @Param('id') id: string,
+    @Body('phone') phone: string,
+  ) {
+    const result = await this.certificateService.send(id, phone);
+    
+    return {
+      success: true,
+      data: result,
+      message: '发送成功',
     };
   }
 }

@@ -252,9 +252,20 @@ export class EvidenceController {
     };
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const evidence = await this.evidenceService.findOne(id);
+  @Get('statistics/summary')
+  async getStatistics(@Query('accidentId') accidentId?: string) {
+    const result = await this.evidenceService.getStatistics(accidentId);
+
+    return {
+      success: true,
+      data: result,
+      message: '获取统计成功',
+    };
+  }
+
+  @Get('evidence-id/:evidenceId')
+  async findByEvidenceId(@Param('evidenceId') evidenceId: string) {
+    const evidence = await this.evidenceService.findByEvidenceId(evidenceId);
 
     return {
       success: true,
@@ -263,9 +274,20 @@ export class EvidenceController {
     };
   }
 
-  @Get('evidence-id/:evidenceId')
-  async findByEvidenceId(@Param('evidenceId') evidenceId: string) {
-    const evidence = await this.evidenceService.findByEvidenceId(evidenceId);
+  @Get('photo-count/:accidentId')
+  async getPhotoCount(@Param('accidentId') accidentId: string) {
+    const result = await this.evidenceService.getPhotoCount(accidentId);
+
+    return {
+      success: true,
+      data: result,
+      message: '获取成功',
+    };
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const evidence = await this.evidenceService.findOne(id);
 
     return {
       success: true,
@@ -285,6 +307,17 @@ export class EvidenceController {
     };
   }
 
+  @Post('check-expired')
+  async checkExpired() {
+    const count = await this.evidenceService.checkAndUpdateExpired();
+
+    return {
+      success: true,
+      data: { updatedCount: count },
+      message: `已检查并更新 ${count} 条过期证据`,
+    };
+  }
+
   @Put(':id/status')
   async updateStatus(
     @Param('id') id: string,
@@ -296,39 +329,6 @@ export class EvidenceController {
       success: true,
       data: evidence,
       message: '状态更新成功',
-    };
-  }
-
-  @Get('statistics/summary')
-  async getStatistics(@Query('accidentId') accidentId?: string) {
-    const result = await this.evidenceService.getStatistics(accidentId);
-
-    return {
-      success: true,
-      data: result,
-      message: '获取统计成功',
-    };
-  }
-
-  @Get('photo-count/:accidentId')
-  async getPhotoCount(@Param('accidentId') accidentId: string) {
-    const result = await this.evidenceService.getPhotoCount(accidentId);
-
-    return {
-      success: true,
-      data: result,
-      message: '获取成功',
-    };
-  }
-
-  @Post('check-expired')
-  async checkExpired() {
-    const count = await this.evidenceService.checkAndUpdateExpired();
-
-    return {
-      success: true,
-      data: { updatedCount: count },
-      message: `已检查并更新 ${count} 条过期证据`,
     };
   }
 }

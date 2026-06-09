@@ -33,6 +33,53 @@ export class OcrService {
     }
   }
 
+  async recognizePlateByUrl(imageUrl: string): Promise<PlateRecognitionResult> {
+    console.log('[OcrService] 开始URL车牌识别:', imageUrl);
+    
+    try {
+      const useMock = !process.env.BAIDU_OCR_API_KEY || !process.env.BAIDU_OCR_SECRET_KEY;
+      
+      if (useMock) {
+        console.log('[OcrService] 使用Mock数据进行URL车牌识别');
+        return this.mockRecognizePlate();
+      }
+      
+      const response = await axios.default.get(imageUrl, {
+        responseType: 'arraybuffer',
+        timeout: 15000,
+      });
+      
+      const imageBase64 = Buffer.from(response.data, 'binary').toString('base64');
+      const token = await this.getBaiduToken();
+      
+      const ocrResponse = await axios.default.post(
+        `https://aip.baidubce.com/rest/2.0/ocr/v1/license_plate?access_token=${token}`,
+        { image: imageBase64 },
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          timeout: 15000,
+        }
+      );
+      
+      if (ocrResponse.data.words_result) {
+        const result = ocrResponse.data.words_result;
+        return {
+          plateNo: result.number || '',
+          plateColor: result.color || 'blue',
+          vehicleType: this.getVehicleType(result.vehicle_type || ''),
+          confidence: result.probability || 0.9,
+        };
+      }
+      
+      return this.mockRecognizePlate();
+    } catch (error) {
+      console.error('[OcrService] URL车牌识别失败:', error);
+      return this.mockRecognizePlate();
+    }
+  }
+
   private async recognizeByBaidu(imagePath: string): Promise<PlateRecognitionResult> {
     const token = await this.getBaiduToken();
     
