@@ -838,3 +838,57 @@
   color: #F53F3F;
   line-height: 1.5;
 }
+
+.lane-switch-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8rpx 0;
+}
+
+.lane-switch-label {
+  font-size: 28rpx;
+  color: #4E5969;
+}
+
+.dashcam-upload-area {
+  background-color: #F7F8FA;
+  border: 2rpx dashed #C9CDD4;
+  border-radius: 16rpx;
+  padding: 40rpx 32rpx;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.dashcam-upload-area:active {
+  background-color: #F0F5FF;
+  border-color: #1E5EFA;
+}
+
+.dashcam-uploaded {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dashcam-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dashcam-icon {
+  font-size: 56rpx;
+  margin-bottom: 12rpx;
+}
+
+.dashcam-text {
+  font-size: 28rpx;
+  color: #4E5969;
+  margin-bottom: 8rpx;
+}
+
+.dashcam-hint {
+  font-size: 24rpx;
+  color: #86909C;
+}

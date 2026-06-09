@@ -81,6 +81,10 @@ function submitReport(data) {
         vehicles,
         scenePhotos,
         collisionPositions: data.collisionPositions || null,
+        laneCrossingA: data.laneCrossingA || false,
+        laneCrossingB: data.laneCrossingB || false,
+        hasDashcamVideo: data.hasDashcamVideo || false,
+        dashcamVideoUrl: data.dashcamVideoUrl || '',
         integrityConfirmed: data.integrityConfirmed || false,
       };
       

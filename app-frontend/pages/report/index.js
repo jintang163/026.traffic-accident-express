@@ -84,6 +84,11 @@ Page({
     integrityConfirmed: false,
     integrityText: '本人承诺所填写的事故信息真实、准确、完整，如有虚假愿承担相应法律责任。',
 
+    laneCrossingA: false,
+    laneCrossingB: false,
+    hasDashcamVideo: false,
+    dashcamVideoUrl: '',
+
     submitting: false,
     submitResult: null,
 
@@ -494,6 +499,35 @@ Page({
     this.setData({ integrityConfirmed: e.detail.value.length > 0 });
   },
 
+  onLaneCrossingAChange: function (e) {
+    this.setData({ laneCrossingA: e.detail.value });
+  },
+
+  onLaneCrossingBChange: function (e) {
+    this.setData({ laneCrossingB: e.detail.value });
+  },
+
+  onDashcamVideoChange: function (e) {
+    this.setData({ hasDashcamVideo: e.detail.value });
+  },
+
+  uploadDashcamVideo: function () {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['video'],
+      sourceType: ['album', 'camera'],
+      maxDuration: 60,
+      success: (res) => {
+        const tempFilePath = res.tempFiles[0].tempFilePath;
+        this.setData({ dashcamVideoUrl: tempFilePath, hasDashcamVideo: true });
+        wx.showToast({ title: '视频已选择', icon: 'success' });
+      },
+      fail: () => {
+        wx.showToast({ title: '视频选择取消', icon: 'none' });
+      }
+    });
+  },
+
   selectLocation: function () {
     wx.chooseLocation({
       success: (res) => {
@@ -529,6 +563,10 @@ Page({
       driverA: this.data.driverA,
       driverB: this.data.driverB,
       collisionPositions: this.data.collisionPositions,
+      laneCrossingA: this.data.laneCrossingA,
+      laneCrossingB: this.data.laneCrossingB,
+      hasDashcamVideo: this.data.hasDashcamVideo,
+      dashcamVideoUrl: this.data.dashcamVideoUrl,
       photos: this.data.photos
     };
 
@@ -622,6 +660,10 @@ Page({
     if (data.driverA) updates.driverA = data.driverA;
     if (data.driverB) updates.driverB = data.driverB;
     if (data.collisionPositions) updates.collisionPositions = data.collisionPositions;
+    if (data.laneCrossingA !== undefined) updates.laneCrossingA = data.laneCrossingA;
+    if (data.laneCrossingB !== undefined) updates.laneCrossingB = data.laneCrossingB;
+    if (data.hasDashcamVideo !== undefined) updates.hasDashcamVideo = data.hasDashcamVideo;
+    if (data.dashcamVideoUrl) updates.dashcamVideoUrl = data.dashcamVideoUrl;
     if (data.photos) updates.photos = data.photos;
     this.setData(updates);
   },
@@ -643,6 +685,10 @@ Page({
       driverA: { name: '', phone: '', license: '' },
       driverB: { name: '', phone: '', license: '' },
       collisionPositions: { vehicleA: [], vehicleB: [] },
+      laneCrossingA: false,
+      laneCrossingB: false,
+      hasDashcamVideo: false,
+      dashcamVideoUrl: '',
       integrityConfirmed: false,
       submitResult: null,
       phoneErrors: { A: '', B: '' },
@@ -725,6 +771,10 @@ Page({
         weather: this.data.weather,
         roadCondition: this.data.roadCondition,
         collisionPositions: this.data.collisionPositions,
+        laneCrossingA: this.data.laneCrossingA,
+        laneCrossingB: this.data.laneCrossingB,
+        hasDashcamVideo: this.data.hasDashcamVideo,
+        dashcamVideoUrl: this.data.dashcamVideoUrl,
         integrityConfirmed: this.data.integrityConfirmed,
         vehicles: this.data.vehicles.map((v, i) => ({
           plateNumber: v.plateNumber,

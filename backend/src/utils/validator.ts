@@ -16,6 +16,7 @@ export const getStatusText = (status: string): string => {
     processing: '处理中',
     completed: '已完成',
     rejected: '已驳回',
+    manual_review: '人工审核中',
     draft: '草稿',
     issued: '已出具',
     verified: '已核验',

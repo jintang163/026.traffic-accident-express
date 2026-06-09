@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseInterceptors, UploadedFile, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseInterceptors, UploadedFile, Request } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
@@ -7,15 +7,20 @@ import { v4 as uuidv4 } from 'uuid';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AccidentService } from './accident.service';
-import { CreateAccidentDto, DetermineLiabilityDto, SaveDraftDto, DeleteDraftDto } from './accident.dto';
+import { CreateAccidentDto, DetermineLiabilityDto, SaveDraftDto, DeleteDraftDto, ReviewLiabilityDto } from './accident.dto';
 import { PhotoEntity } from './photo.entity';
+import { LiabilityRuleEngine } from './liability-rule-engine';
+import { LiabilityRuleEntity } from './liability-rule.entity';
 
 @Controller('accident')
 export class AccidentController {
   constructor(
     private readonly accidentService: AccidentService,
+    private readonly ruleEngine: LiabilityRuleEngine,
     @InjectRepository(PhotoEntity)
     private photoRepository: Repository<PhotoEntity>,
+    @InjectRepository(LiabilityRuleEntity)
+    private ruleRepository: Repository<LiabilityRuleEntity>,
   ) {}
 
   @Post('report')
@@ -78,6 +83,17 @@ export class AccidentController {
     };
   }
 
+  @Get('review/list')
+  async getReviewList(@Query() query: { page?: number; pageSize?: number }) {
+    const result = await this.accidentService.getReviewList(query);
+
+    return {
+      success: true,
+      data: result,
+      message: '获取成功',
+    };
+  }
+
   @Post('draft')
   async saveDraft(@Body() dto: SaveDraftDto, @Request() req) {
     const userId = req.user?.id;
@@ -99,6 +115,53 @@ export class AccidentController {
       success: true,
       data: null,
       message: '草稿删除成功',
+    };
+  }
+
+  @Get('rules')
+  async getRules() {
+    const rules = await this.ruleEngine.getRuleList();
+
+    return {
+      success: true,
+      data: rules,
+      message: '获取成功',
+    };
+  }
+
+  @Post('rules')
+  async createRule(@Body() ruleData: Partial<LiabilityRuleEntity>) {
+    const rule = await this.ruleEngine.createRule(ruleData);
+
+    return {
+      success: true,
+      data: rule,
+      message: '规则创建成功',
+    };
+  }
+
+  @Put('rules/:id')
+  async updateRule(
+    @Param('id') id: string,
+    @Body() ruleData: Partial<LiabilityRuleEntity>,
+  ) {
+    const rule = await this.ruleEngine.updateRule(id, ruleData);
+
+    return {
+      success: true,
+      data: rule,
+      message: '规则更新成功',
+    };
+  }
+
+  @Delete('rules/:id')
+  async deleteRule(@Param('id') id: string) {
+    await this.ruleEngine.deleteRule(id);
+
+    return {
+      success: true,
+      data: null,
+      message: '规则删除成功',
     };
   }
 
@@ -124,6 +187,20 @@ export class AccidentController {
       success: true,
       data: accident,
       message: '责任判定完成',
+    };
+  }
+
+  @Post(':id/review')
+  async reviewLiability(
+    @Param('id') id: string,
+    @Body() dto: ReviewLiabilityDto,
+  ) {
+    const accident = await this.accidentService.reviewLiability(id, dto);
+
+    return {
+      success: true,
+      data: accident,
+      message: '人工审核完成',
     };
   }
 

@@ -232,7 +232,70 @@
 
       <view class="card">
         <view class="step-title">
-          <text class="step-icon">💥</text>
+          <text class="step-icon">�</text>
+          <text class="step-title-text">车道线情况</text>
+        </view>
+        <text class="step-desc">车道线情况是定责的重要依据，请如实选择</text>
+
+        <view class="form-item">
+          <view class="lane-switch-row">
+            <text class="lane-switch-label">A车（我方）是否压线</text>
+            <switch 
+              checked="{{laneCrossingA}}" 
+              bindchange="onLaneCrossingAChange"
+              color="#1E5EFA"
+            />
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="lane-switch-row">
+            <text class="lane-switch-label">B车（对方）是否压线</text>
+            <switch 
+              checked="{{laneCrossingB}}" 
+              bindchange="onLaneCrossingBChange"
+              color="#1E5EFA"
+            />
+          </view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="step-title">
+          <text class="step-icon">📹</text>
+          <text class="step-title-text">行车记录仪</text>
+        </view>
+        <text class="step-desc">如有行车记录仪视频可作为定责辅助证据（可选）</text>
+
+        <view class="form-item">
+          <view class="lane-switch-row">
+            <text class="lane-switch-label">是否有行车记录仪视频</text>
+            <switch 
+              checked="{{hasDashcamVideo}}" 
+              bindchange="onDashcamVideoChange"
+              color="#1E5EFA"
+            />
+          </view>
+        </view>
+
+        <view wx:if="{{hasDashcamVideo}}" class="form-item">
+          <view class="dashcam-upload-area" bindtap="uploadDashcamVideo">
+            <view wx:if="{{dashcamVideoUrl}}" class="dashcam-uploaded">
+              <text class="dashcam-icon">🎬</text>
+              <text class="dashcam-text">视频已选择，点击更换</text>
+            </view>
+            <view wx:else class="dashcam-placeholder">
+              <text class="dashcam-icon">📹</text>
+              <text class="dashcam-text">点击上传行车记录仪视频</text>
+              <text class="dashcam-hint">支持mp4格式，最长60秒</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="step-title">
+          <text class="step-icon">�</text>
           <text class="step-title-text">碰撞位置</text>
         </view>
         <text class="step-desc">请勾选双方车辆的碰撞部位，帮助判定事故责任</text>
@@ -483,6 +546,14 @@
             <text class="summary-label">碰撞位置：</text>
             <text class="summary-value">A车: {{collisionPositions.vehicleA.join('、') || '-'}} | B车: {{collisionPositions.vehicleB.join('、') || '-'}}</text>
           </view>
+          <view class="summary-row">
+            <text class="summary-label">车道线：</text>
+            <text class="summary-value">A车{{laneCrossingA ? '压线' : '未压线'}} | B车{{laneCrossingB ? '压线' : '未压线'}}</text>
+          </view>
+          <view class="summary-row" wx:if="{{hasDashcamVideo}}">
+            <text class="summary-label">行车记录仪：</text>
+            <text class="summary-value">已提供</text>
+          </view>
           <view class="summary-row" wx:if="{{description}}">
             <text class="summary-label">事故描述：</text>
             <text class="summary-value">{{description}}</text>
@@ -559,11 +630,31 @@
         <view class="result-section" wx:if="{{submitResult}}">
           <view class="result-item">
             <text class="result-label">事故编号</text>
-            <text class="result-value">{{submitResult.accident.accidentNumber || submitResult.accident.id}}</text>
+            <text class="result-value">{{submitResult.accident.reportNo || submitResult.accident.id}}</text>
           </view>
-          <view class="result-item">
+          <view class="result-item" wx:if="{{submitResult.liability}}">
             <text class="result-label">责任认定</text>
-            <text class="result-value text-primary-color">{{submitResult.liability?.description || '已完成'}}</text>
+            <text class="result-value text-primary-color">{{submitResult.liability.liabilityDescription || '已完成'}}</text>
+          </view>
+          <view class="result-item" wx:if="{{submitResult.liability?.liabilityType}}">
+            <text class="result-label">责任类型</text>
+            <text class="result-value">{{submitResult.liability.liabilityType === 'full' ? '全责' : submitResult.liability.liabilityType === 'equal' ? '同等责任' : '主次责任'}}</text>
+          </view>
+          <view class="result-item" wx:if="{{submitResult.liability?.primaryLiability}}">
+            <text class="result-label">责任比例</text>
+            <text class="result-value">{{submitResult.liability.primaryParty}} {{submitResult.liability.primaryLiability}}% / {{submitResult.liability.secondaryParty}} {{submitResult.liability.secondaryLiability}}%</text>
+          </view>
+          <view class="result-item" wx:if="{{submitResult.liability?.ruleName}}">
+            <text class="result-label">适用规则</text>
+            <text class="result-value">{{submitResult.liability.ruleName}}（{{submitResult.liability.ruleType === 'hard' ? '法定规则' : '建议规则'}}）</text>
+          </view>
+          <view class="result-item" wx:if="{{submitResult.liability?.legalBasis}}">
+            <text class="result-label">法律依据</text>
+            <text class="result-value">{{submitResult.liability.legalBasis}}</text>
+          </view>
+          <view class="result-item" wx:if="{{submitResult.liability?.needsManualReview}}">
+            <text class="result-label">审核状态</text>
+            <text class="result-value" style="color: #FF7D00;">需交警人工复核</text>
           </view>
           <view class="result-item">
             <text class="result-label">认定书编号</text>

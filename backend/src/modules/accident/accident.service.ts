@@ -6,8 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { AccidentEntity, AccidentStatus, AccidentType } from './accident.entity';
 import { VehicleEntity } from './vehicle.entity';
 import { PhotoEntity } from './photo.entity';
-import { CreateAccidentDto, DetermineLiabilityDto, SaveDraftDto } from './accident.dto';
-import { validateAccidentReport } from '../../utils/validator';
+import { CreateAccidentDto, DetermineLiabilityDto, SaveDraftDto, ReviewLiabilityDto } from './accident.dto';
+import { LiabilityRuleEngine, LiabilityFact } from './liability-rule-engine';
 
 const DRAFT_KEY_PREFIX = 'draft:accident:';
 const DRAFT_TTL_SECONDS = 86400;
@@ -23,6 +23,7 @@ export class AccidentService {
     private vehicleRepository: Repository<VehicleEntity>,
     @InjectRepository(PhotoEntity)
     private photoRepository: Repository<PhotoEntity>,
+    private readonly ruleEngine: LiabilityRuleEngine,
   ) {}
 
   async create(dto: CreateAccidentDto, userId?: string): Promise<AccidentEntity> {
@@ -46,7 +47,12 @@ export class AccidentService {
       weather: dto.weather || '晴',
       roadCondition: dto.roadCondition || '干燥',
       collisionPositions: dto.collisionPositions || null,
+      laneCrossingA: dto.laneCrossingA || false,
+      laneCrossingB: dto.laneCrossingB || false,
+      hasDashcamVideo: dto.hasDashcamVideo || false,
+      dashcamVideoUrl: dto.dashcamVideoUrl || null,
       integrityConfirmed: dto.integrityConfirmed,
+      reviewStatus: 'none',
       createdBy: userId,
     });
 
@@ -139,76 +145,141 @@ export class AccidentService {
 
     const accident = await this.findOne(accidentId);
 
-    const liabilityResult = this.calculateLiability(accident);
+    const fact = this.buildFactFromAccident(accident);
+
+    const conclusion = await this.ruleEngine.evaluate(fact);
+
+    console.log('[AccidentService] 规则引擎判定结果:', {
+      ruleId: conclusion.ruleId,
+      ruleName: conclusion.ruleName,
+      ruleType: conclusion.ruleType,
+      primaryParty: conclusion.primaryParty,
+      liabilityType: conclusion.liabilityType,
+      needsManualReview: conclusion.needsManualReview,
+      confidence: conclusion.confidence,
+    });
+
+    const vehicles = accident.vehicles || [];
+    const vehicleA = vehicles.find((v) => v.vehicleOrder === 1) || vehicles[0];
+    const vehicleB = vehicles.find((v) => v.vehicleOrder === 2) || vehicles[1];
+
+    let primaryPlateNo = '';
+    let secondaryPlateNo = '';
+
+    if (conclusion.primaryParty === 'A') {
+      primaryPlateNo = vehicleA?.plateNo || 'A车';
+      secondaryPlateNo = vehicleB?.plateNo || 'B车';
+    } else if (conclusion.primaryParty === 'B') {
+      primaryPlateNo = vehicleB?.plateNo || 'B车';
+      secondaryPlateNo = vehicleA?.plateNo || 'A车';
+    } else {
+      primaryPlateNo = vehicleA?.plateNo || 'A车';
+      secondaryPlateNo = vehicleB?.plateNo || 'B车';
+    }
 
     accident.liabilityResult = {
-      ...liabilityResult,
+      primaryParty: primaryPlateNo,
+      secondaryParty: secondaryPlateNo,
+      primaryLiability: conclusion.primaryLiability,
+      secondaryLiability: conclusion.secondaryLiability,
+      liabilityType: conclusion.liabilityType,
+      liabilityDescription: conclusion.liabilityDescription,
+      ruleId: conclusion.ruleId,
+      ruleName: conclusion.ruleName,
+      ruleType: conclusion.ruleType,
+      legalBasis: conclusion.legalBasis,
+      confidence: conclusion.confidence,
+      needsManualReview: conclusion.needsManualReview,
+      reviewReason: conclusion.reviewReason,
       determinedAt: new Date(),
-      officer: dto.officer || '系统自动判定',
+      officer: dto?.officer || '系统自动判定',
     };
-    accident.status = 'completed';
+
+    if (conclusion.needsManualReview) {
+      accident.status = 'manual_review';
+      accident.reviewStatus = 'pending';
+      console.log('[AccidentService] 需人工审核，原因:', conclusion.reviewReason);
+    } else {
+      accident.status = 'completed';
+      accident.reviewStatus = 'none';
+    }
 
     return await this.accidentRepository.save(accident);
   }
 
-  private calculateLiability(accident: AccidentEntity) {
-    const { accidentType, vehicles } = accident;
+  private buildFactFromAccident(accident: AccidentEntity): LiabilityFact {
+    const collisionPositions = accident.collisionPositions || { vehicleA: [], vehicleB: [] };
 
-    if (vehicles.length < 2) {
-      return {
-        primaryParty: vehicles[0]?.plateNo || '',
-        secondaryParty: '',
-        primaryLiability: 100,
-        secondaryLiability: 0,
-        liabilityDescription: '单方事故，驾驶员承担全部责任',
-      };
-    }
-
-    const primaryVehicle = vehicles[1] || vehicles[0];
-    const secondaryVehicle = vehicles[0];
-
-    const liabilityRules: Record<string, { primary: number; secondary: number; description: string }> = {
-      rear_end: {
-        primary: 100,
-        secondary: 0,
-        description: '后车未保持安全车距，负全部责任',
-      },
-      side_swipe: {
-        primary: 70,
-        secondary: 30,
-        description: '变道车辆未观察相邻车道情况，负主要责任；另一方未保持安全车距，负次要责任',
-      },
-      head_on: {
-        primary: 50,
-        secondary: 50,
-        description: '双方均未注意观察路况，负同等责任',
-      },
-      reverse: {
-        primary: 100,
-        secondary: 0,
-        description: '倒车车辆未查明车后情况，负全部责任',
-      },
-      intersection: {
-        primary: 60,
-        secondary: 40,
-        description: '未让行车辆负主要责任，另一方负次要责任',
-      },
-      other: {
-        primary: 50,
-        secondary: 50,
-        description: '事故责任需进一步调查，暂按同等责任处理',
-      },
-    };
-
-    const rule = liabilityRules[accidentType] || liabilityRules.other;
+    const vehicleAPosition = collisionPositions.vehicleA?.join(',') || '';
+    const vehicleBPosition = collisionPositions.vehicleB?.join(',') || '';
 
     return {
-      primaryParty: primaryVehicle.plateNo,
-      secondaryParty: secondaryVehicle.plateNo,
-      primaryLiability: rule.primary,
-      secondaryLiability: rule.secondary,
-      liabilityDescription: rule.description,
+      accidentType: accident.accidentType,
+      collisionPositions,
+      laneCrossingA: accident.laneCrossingA || false,
+      laneCrossingB: accident.laneCrossingB || false,
+      hasDashcamVideo: accident.hasDashcamVideo || false,
+      weather: accident.weather,
+      roadCondition: accident.roadCondition,
+      vehicleAPosition,
+      vehicleBPosition,
     };
+  }
+
+  async reviewLiability(
+    accidentId: string,
+    dto: ReviewLiabilityDto,
+  ): Promise<AccidentEntity> {
+    console.log('[AccidentService] 人工审核责任判定:', accidentId);
+
+    const accident = await this.findOne(accidentId);
+
+    if (accident.reviewStatus !== 'pending') {
+      throw new BadRequestException('该事故不在待审核状态');
+    }
+
+    accident.reviewResult = {
+      reviewer: dto.reviewer || '交警在线复核',
+      reviewedAt: new Date(),
+      primaryParty: dto.primaryParty,
+      primaryLiability: dto.primaryLiability,
+      secondaryLiability: dto.secondaryLiability,
+      liabilityDescription: dto.liabilityDescription,
+      reviewComment: dto.reviewComment || '',
+    };
+
+    accident.reviewStatus = 'approved';
+    accident.status = 'completed';
+
+    if (accident.liabilityResult) {
+      accident.liabilityResult.primaryParty = dto.primaryParty;
+      accident.liabilityResult.primaryLiability = dto.primaryLiability;
+      accident.liabilityResult.secondaryLiability = dto.secondaryLiability;
+      accident.liabilityResult.liabilityDescription = dto.liabilityDescription;
+      accident.liabilityResult.officer = dto.reviewer || '交警在线复核';
+      accident.liabilityResult.determinedAt = new Date();
+    }
+
+    return await this.accidentRepository.save(accident);
+  }
+
+  async getReviewList(params?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<{ list: AccidentEntity[]; total: number }> {
+    const { page = 1, pageSize = 20 } = params || {};
+
+    const [list, total] = await this.accidentRepository
+      .createQueryBuilder('accident')
+      .leftJoinAndSelect('accident.vehicles', 'vehicles')
+      .leftJoinAndSelect('accident.scenePhotos', 'scenePhotos')
+      .where('accident.reviewStatus = :reviewStatus', { reviewStatus: 'pending' })
+      .orderBy('accident.createdAt', 'ASC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return { list, total };
   }
 
   async saveDraft(dto: SaveDraftDto, userId?: string): Promise<{ draftId: string }> {
@@ -253,7 +324,7 @@ export class AccidentService {
     return await this.accidentRepository.save(accident);
   }
 
-  async getStatistics(userId?: string): Promise<{ total: number; pending: number; processing: number; completed: number }> {
+  async getStatistics(userId?: string): Promise<{ total: number; pending: number; processing: number; completed: number; manualReview: number }> {
     const queryBuilder = this.accidentRepository.createQueryBuilder('accident');
 
     if (userId) {
@@ -274,7 +345,11 @@ export class AccidentService {
       where: { status: 'completed', ...(userId ? { createdBy: userId } : {}) },
     });
 
-    return { total, pending, processing, completed };
+    const manualReview = await this.accidentRepository.count({
+      where: { status: 'manual_review', ...(userId ? { createdBy: userId } : {}) },
+    });
+
+    return { total, pending, processing, completed, manualReview };
   }
 
   private generateReportNo(): string {

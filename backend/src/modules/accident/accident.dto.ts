@@ -117,6 +117,22 @@ export class CreateAccidentDto {
   @Type(() => CollisionPositionDto)
   collisionPositions?: CollisionPositionDto;
 
+  @IsOptional()
+  @IsBoolean()
+  laneCrossingA?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  laneCrossingB?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  hasDashcamVideo?: boolean;
+
+  @IsOptional()
+  @IsString()
+  dashcamVideoUrl?: string;
+
   @IsBoolean()
   integrityConfirmed: boolean;
 }
@@ -125,6 +141,28 @@ export class DetermineLiabilityDto {
   @IsOptional()
   @IsString()
   officer?: string;
+}
+
+export class ReviewLiabilityDto {
+  @IsString()
+  primaryParty: string;
+
+  @IsNumber()
+  primaryLiability: number;
+
+  @IsNumber()
+  secondaryLiability: number;
+
+  @IsString()
+  liabilityDescription: string;
+
+  @IsOptional()
+  @IsString()
+  reviewComment?: string;
+
+  @IsOptional()
+  @IsString()
+  reviewer?: string;
 }
 
 export class SaveDraftDto {
