@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { AccidentEntity } from '../accident/accident.entity';
 
 export type CertificateStatus = 'draft' | 'issued' | 'verified' | 'revoked';
+export type CertificateTemplateType = 'certificate' | 'agreement';
 
 @Entity('certificates')
 export class CertificateEntity {
@@ -10,6 +11,13 @@ export class CertificateEntity {
 
   @Column({ unique: true, length: 50 })
   certificateNo: string;
+
+  @Column({
+    type: 'enum',
+    enum: ['certificate', 'agreement'],
+    default: 'certificate',
+  })
+  templateType: CertificateTemplateType;
 
   @Column({ type: 'uuid' })
   accidentId: string;

@@ -1,0 +1,128 @@
+<!--pages/verify/index.wxml-->
+<view class="container">
+  <view class="header">
+    <view class="logo-icon">🚗</view>
+    <view class="page-title">{{isAgreement ? '道路交通事故自行协商协议书核验' : '道路交通事故认定书核验'}}</view>
+    <view class="page-subtitle">输入认定书编号与核验码验证真伪</view>
+  </view>
+
+  <view class="form-card" wx:if="{{!hasResult}}">
+    <view class="form-item">
+      <view class="form-label">认定书编号 / 协议书编号</view>
+      <input class="form-input" placeholder="如 RD202606080001 或 XSSQ202606080001"
+        value="{{inputNo}}" bindinput="onInputNo" maxlength="32" />
+    </view>
+    <view class="form-item">
+      <view class="form-label">核验码</view>
+      <input class="form-input" placeholder="如 VERIFYABC12345"
+        value="{{inputCode}}" bindinput="onInputCode" maxlength="32" />
+    </view>
+    <button class="form-submit" loading="{{loading}}" bindtap="doVerify" disabled="{{loading}}">
+      立即核验真伪
+    </button>
+    <view class="form-hint">💡 扫描认定书/协议书上的二维码可直接进入核验</view>
+  </view>
+
+  <view class="form-card" wx:if="{{loading}}">
+    <view class="loading-box">
+      <view class="loading-icon">⏳</view>
+      <view class="loading-text">核验中，请稍候...</view>
+    </view>
+  </view>
+
+  <view class="result-card" wx:if="{{hasResult && !loading}}">
+    <view class="result-badge {{verifyResult.valid ? 'valid' : 'invalid'}}">
+      <text class="result-icon">{{verifyResult.valid ? '✓' : '✕'}}</text>
+      <text class="result-text">{{verifyResult.valid ? '核验通过 · 文件真实有效' : (verifyResult.message || '核验未通过')}}</text>
+    </view>
+
+    <block wx:if="{{verifyResult.valid && cert}}">
+      <view class="cert-header">
+        <view class="cert-no">{{cert.certificateNo}}</view>
+        <view class="cert-sub">
+          {{isAgreement ? '自行协商协议书' : '事故认定书（简易程序）'}}
+          <text class="status-tag status-{{cert.status}}">{{statusText}}</text>
+        </view>
+      </view>
+
+      <view class="section" wx:if="{{cert.qrCodeUrl}}">
+        <view class="qr-box">
+          <image class="qr-img" src="{{cert.qrCodeUrl}}" mode="aspectFit" bindtap="previewQrCode" />
+          <view class="qr-tip">📷 点击图片放大 / 扫码再次核验</view>
+        </view>
+      </view>
+
+      <view class="section">
+        <view class="sec-title">事故信息</view>
+        <view class="info-row"><text>事故编号</text><text class="mono">{{cert.accident.reportNo || '—'}}</text></view>
+        <view class="info-row"><text>事故类型</text><text>{{accidentTypeText}}</text></view>
+        <view class="info-row"><text>发生时间</text><text>{{occurTimeText}}</text></view>
+        <view class="info-row full"><text>发生地点</text><text>{{cert.accident.location || '—'}}</text></view>
+      </view>
+
+      <view class="section">
+        <view class="sec-title">当事人信息</view>
+        <view class="party-card" wx:for="{{cert.parties}}" wx:key="id">
+          <view class="party-label {{index === 0 ? 'party-a' : 'party-b'}}">{{index === 0 ? '甲方' : '乙方'}}</view>
+          <view class="party-row">
+            <text>姓名</text><text class="bold">{{item.name}}</text>
+          </view>
+          <view class="party-row">
+            <text>车牌</text><text class="bold">{{item.plateNo}}</text>
+          </view>
+          <view class="party-row">
+            <text>责任</text><text class="liability">{{item.liabilityText}}</text>
+          </view>
+          <view class="party-row" wx:if="{{item.phone}}">
+            <text>电话</text><text>{{item.phone}}</text>
+          </view>
+          <view class="party-row">
+            <text>保险公司</text><text>{{item.insuranceCompany || '—'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section" wx:if="{{cert.accident.liabilityResult}}">
+        <view class="sec-title">责任认定</view>
+        <view class="liability-box">{{cert.accident.liabilityResult.liabilityDescription}}</view>
+        <view class="liability-ratio">
+          甲方 {{cert.accident.liabilityResult.primaryLiability}}% / 乙方 {{cert.accident.liabilityResult.secondaryLiability}}%
+        </view>
+        <view class="legal-box" wx:if="{{cert.accident.liabilityResult.legalBasis}}">
+          📜 {{cert.accident.liabilityResult.legalBasis}}
+        </view>
+      </view>
+
+      <view class="section" wx:if="{{cert.signatureInfo}}">
+        <view class="sec-title">电子签章信息</view>
+        <view class="info-row"><text>签章服务商</text><text>{{cert.signatureInfo.provider}}</text></view>
+        <view class="info-row"><text>印章类型</text><text>{{cert.signatureInfo.sealType === 'police' ? '交警部门印章' : '平台电子印章'}}</text></view>
+        <view class="info-row"><text>印章序列号</text><text class="mono">{{cert.signatureInfo.sealSn}}</text></view>
+        <view class="info-row"><text>证书序列号</text><text class="mono">{{cert.signatureInfo.certificateSn}}</text></view>
+        <view class="info-row full"><text>签章时间</text><text>{{signedAtText}}</text></view>
+      </view>
+
+      <view class="section">
+        <view class="sec-title">签发信息</view>
+        <view class="info-row"><text>出具单位</text><text>{{cert.issuedBy}}</text></view>
+        <view class="info-row"><text>出具时间</text><text>{{issuedAtText}}</text></view>
+        <view class="info-row"><text>核验码</text><text class="mono">{{cert.verifyCode}}</text></view>
+        <view class="info-row"><text>有效期至</text><text>{{validUntilText}}</text></view>
+      </view>
+
+      <view class="action-bar">
+        <button class="btn-primary" bindtap="downloadPdf">📄 下载PDF</button>
+      </view>
+    </block>
+
+    <view class="retry-box" wx:if="{{!verifyResult.valid}}">
+      <view class="empty-icon">🔍</view>
+      <view class="empty-text">未查询到匹配的认定书，可能原因：</view>
+      <view class="empty-list">
+        <view>• 认定书编号或核验码不正确</view>
+        <view>• 认定书已被撤销或超过有效期</view>
+      </view>
+      <button class="btn-secondary" bindtap="resetVerify">重新核验</button>
+    </view>
+  </view>
+</view>

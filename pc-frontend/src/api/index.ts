@@ -16,8 +16,10 @@ export const getCertificateList = (params: any) => request.get('/certificate/lis
 
 export const getCertificateDetail = (id: string) => request.get(`/certificate/${id}`);
 
-export const verifyCertificate = (certificateNumber: string) =>
-  request.post('/certificate/verify', { certificateNumber });
+export const verifyCertificate = (certificateNumber: string, verifyCode?: string) =>
+  request.post('/certificate/verify', verifyCode
+    ? { certificateNo: certificateNumber, verifyCode }
+    : { certificateNumber });
 
 export const generateCertificate = (accidentId: string) =>
   request.post('/certificate/generate', { accidentId });

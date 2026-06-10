@@ -76,7 +76,7 @@ export class QrCodeService {
     baseUrl?: string,
   ): Promise<Buffer> {
     const url = (baseUrl || process.env.BASE_URL || 'http://localhost:3000')
-      + '/certificate/verify?no=' + certificateNo
+      + '/api/certificate/verify?no=' + certificateNo
       + '&code=' + verifyCode;
 
     return this.generateQrCodeBuffer(url, {
@@ -91,7 +91,7 @@ export class QrCodeService {
     baseUrl?: string,
   ): Promise<string> {
     const url = (baseUrl || process.env.BASE_URL || 'http://localhost:3000')
-      + '/certificate/verify?no=' + certificateNo
+      + '/api/certificate/verify?no=' + certificateNo
       + '&code=' + verifyCode;
 
     return this.generateQrCodeBase64(url, {

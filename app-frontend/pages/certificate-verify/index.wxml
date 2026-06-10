@@ -1,0 +1,45 @@
+<view class="verify-page">
+  <view class="verify-header">
+    <view class="verify-icon">🛡️</view>
+    <view class="verify-title">认定书核验</view>
+    <view class="verify-desc">输入认定书编号和核验码验证真伪</view>
+  </view>
+
+  <view class="verify-form">
+    <view class="form-item">
+      <view class="form-label">认定书编号</view>
+      <input class="form-input" placeholder="请输入认定书编号" value="{{certificateNo}}" bindinput="onCertificateNoInput" />
+    </view>
+    <view class="form-item">
+      <view class="form-label">核验码</view>
+      <input class="form-input" placeholder="请输入核验码" value="{{verifyCode}}" bindinput="onVerifyCodeInput" />
+    </view>
+    <button class="verify-btn" bindtap="doVerify" loading="{{loading}}" disabled="{{loading}}">
+      立即核验
+    </button>
+  </view>
+
+  <view class="verify-result" wx:if="{{result}}">
+    <view class="result-card {{result.valid ? 'result-success' : 'result-fail'}}">
+      <view class="result-icon">{{result.valid ? '✅' : '❌'}}</view>
+      <view class="result-status">{{result.valid ? '核验通过' : '核验失败'}}</view>
+      <view class="result-desc">
+        {{result.valid ? '该认定书真实有效，由交通事故快速处理系统签发' : '未找到匹配的认定书信息，或认定书已被撤销/过期'}}
+      </view>
+    </view>
+
+    <view class="result-info" wx:if="{{result.valid}}">
+      <view class="info-item">
+        <text class="info-label">认定书编号</text>
+        <text class="info-value">{{result.certificateNo}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="verify-tips">
+    <view class="tips-title">温馨提示</view>
+    <view class="tips-item">1. 扫描认定书上的二维码可直接核验</view>
+    <view class="tips-item">2. 认定书编号和核验码可在认定书正文中找到</view>
+    <view class="tips-item">3. 如有疑问，请拨打交通事故快处服务热线</view>
+  </view>
+</view>

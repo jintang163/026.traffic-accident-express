@@ -6,7 +6,9 @@
     "pages/mine/index",
     "pages/camera/index",
     "pages/accident-detail/index",
-    "pages/certificate-detail/index"
+    "pages/certificate-detail/index",
+    "pages/certificate-verify/index",
+    "pages/verify/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

@@ -91,7 +91,7 @@ const CertificateDetail: React.FC = () => {
   const handleVerify = async () => {
     if (!data?.certificateNumber) return;
     try {
-      const res = await verifyCertificate(data.certificateNumber);
+      const res = await verifyCertificate(data.certificateNumber, data.verifyCode);
       setVerifyResult(res);
     } catch (error) {
       setVerifyResult({ valid: false, message: '核验失败' });
@@ -102,23 +102,20 @@ const CertificateDetail: React.FC = () => {
     if (data?.pdfUrl) {
       window.open(data.pdfUrl, '_blank');
     } else if (id) {
-      const baseUrl = window.location.origin;
-      window.open(baseUrl + '/api/certificate/' + id + '/pdf', '_blank');
+      window.open('/api/certificate/' + id + '/pdf', '_blank');
     }
   };
 
   const handlePrint = () => {
     if (id) {
-      const baseUrl = window.location.origin;
-      window.open(baseUrl + '/api/certificate/' + id + '/pdf', '_blank');
+      window.open('/api/certificate/' + id + '/pdf', '_blank');
     }
   };
 
   const handleRegeneratePdf = async () => {
     if (!id) return;
     try {
-      const baseUrl = window.location.origin;
-      const response = await fetch(baseUrl + '/api/certificate/' + id + '/regenerate-pdf', { method: 'POST' });
+      const response = await fetch('/api/certificate/' + id + '/regenerate-pdf', { method: 'POST' });
       const result = await response.json();
       if (result.success && result.data) {
         setData({ ...data, ...result.data });

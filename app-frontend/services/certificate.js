@@ -15,9 +15,9 @@ function generateCertificate(accidentId) {
   return post('/certificate/generate', { accidentId });
 }
 
-function verifyCertificate(certificateNumber) {
-  console.log('[Certificate] 核验认定书:', certificateNumber);
-  return post('/certificate/verify', { certificateNumber });
+function verifyCertificate(certificateNo, verifyCode) {
+  console.log('[Certificate] 核验认定书:', certificateNo);
+  return post('/certificate/verify', { certificateNo, verifyCode });
 }
 
 function shareCertificate(id) {

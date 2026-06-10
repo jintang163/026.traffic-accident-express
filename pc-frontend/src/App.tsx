@@ -6,6 +6,7 @@ import AccidentList from './pages/AccidentList';
 import AccidentDetail from './pages/AccidentDetail';
 import CertificateList from './pages/CertificateList';
 import CertificateDetail from './pages/CertificateDetail';
+import CertificateVerify from './pages/CertificateVerify';
 import Login from './pages/Login';
 
 const { Content } = Layout;
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/accidents" element={<AccidentList />} />
                 <Route path="/accidents/:id" element={<AccidentDetail />} />
                 <Route path="/certificates" element={<CertificateList />} />
+                <Route path="/certificates/verify" element={<CertificateVerify />} />
                 <Route path="/certificates/:id" element={<CertificateDetail />} />
               </Routes>
             </Content>
