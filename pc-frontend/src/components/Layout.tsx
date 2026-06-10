@@ -6,6 +6,9 @@ import {
   UserOutlined,
   LogoutOutlined,
   SettingOutlined,
+  AuditOutlined,
+  SafetyCertificateOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { MenuProps } from 'antd';
@@ -16,23 +19,35 @@ const menuItems: MenuProps['items'] = [
   {
     key: '/dashboard',
     icon: <DashboardOutlined />,
-    label: '数据概览',
+    label: '统计仪表盘',
   },
   {
     key: '/accidents',
     icon: <CarOutlined />,
-    label: '事故管理',
+    label: '事故审核',
   },
   {
     key: '/certificates',
     icon: <FileTextOutlined />,
     label: '认定书管理',
   },
+  {
+    key: '/appeals',
+    icon: <AuditOutlined />,
+    label: '申诉复核',
+  },
+  {
+    key: '/audit-logs',
+    icon: <FileSearchOutlined />,
+    label: '操作日志',
+  },
 ];
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const selectedKey = '/' + (location.pathname.split('/')[1] || 'dashboard');
 
   const userMenuItems: MenuProps['items'] = [
     {
@@ -71,7 +86,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[location.pathname]}
+          selectedKeys={[selectedKey]}
           items={menuItems}
           onClick={({ key }) => navigate(key as string)}
         />

@@ -9,6 +9,8 @@ import { CertificateModule } from './modules/certificate/certificate.module';
 import { EvidenceModule } from './modules/evidence/evidence.module';
 import { AppealModule } from './modules/appeal/appeal.module';
 import { SecurityModule } from './modules/security/security.module';
+import { AuditLogModule } from './modules/audit/audit-log.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { SecurityModule } from './modules/security/security.module';
     EvidenceModule,
     AppealModule,
     SecurityModule,
+    AuditLogModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

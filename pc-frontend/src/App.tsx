@@ -7,6 +7,8 @@ import AccidentDetail from './pages/AccidentDetail';
 import CertificateList from './pages/CertificateList';
 import CertificateDetail from './pages/CertificateDetail';
 import CertificateVerify from './pages/CertificateVerify';
+import AppealReview from './pages/AppealReview';
+import AuditLog from './pages/AuditLog';
 import Login from './pages/Login';
 
 const { Content } = Layout;
@@ -34,6 +36,8 @@ function App() {
                 <Route path="/certificates" element={<CertificateList />} />
                 <Route path="/certificates/verify" element={<CertificateVerify />} />
                 <Route path="/certificates/:id" element={<CertificateDetail />} />
+                <Route path="/appeals" element={<AppealReview />} />
+                <Route path="/audit-logs" element={<AuditLog />} />
               </Routes>
             </Content>
           </AppLayout>

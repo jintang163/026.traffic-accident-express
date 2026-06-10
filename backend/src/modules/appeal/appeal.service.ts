@@ -183,6 +183,14 @@ export class AppealService {
     };
   }
 
+  async countByDateRange(start: Date, end: Date): Promise<number> {
+    return this.appealRepository
+      .createQueryBuilder('appeal')
+      .where('appeal.createdAt >= :start', { start })
+      .andWhere('appeal.createdAt <= :end', { end })
+      .getCount();
+  }
+
   private generateAppealNo(): string {
     const prefix = 'SS' + dayjs().format('YYYYMMDD');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');

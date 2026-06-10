@@ -405,4 +405,27 @@ export class AccidentService {
       remainingHours: Math.ceil(remainingMs / (1000 * 60 * 60)),
     };
   }
+
+  async countByDateRange(start: Date, end: Date): Promise<number> {
+    return this.accidentRepository
+      .createQueryBuilder('accident')
+      .where('accident.createdAt >= :start', { start })
+      .andWhere('accident.createdAt <= :end', { end })
+      .getCount();
+  }
+
+  async getTypeDistribution(): Promise<Array<{ type: string; count: number }>> {
+    const result = await this.accidentRepository
+      .createQueryBuilder('accident')
+      .select('accident.accidentType', 'type')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('accident.accidentType')
+      .orderBy('count', 'DESC')
+      .getRawMany();
+
+    return result.map((r) => ({
+      type: r.type || 'other',
+      count: parseInt(r.count, 10),
+    }));
+  }
 }

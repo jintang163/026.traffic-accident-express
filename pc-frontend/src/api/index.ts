@@ -27,3 +27,53 @@ export const generateCertificate = (accidentId: string) =>
 export const getOcrList = (params: any) => request.get('/ocr/list', { params });
 
 export const getUserList = (params: any) => request.get('/user/list', { params });
+
+// Admin APIs
+
+export const adminGetAccidentList = (params: any) =>
+  request.get('/admin/accidents', { params });
+
+export const adminOverrideLiability = (id: string, data: any) =>
+  request.put(`/admin/accidents/${id}/liability`, data);
+
+export const adminGetEvidence = (id: string) =>
+  request.get(`/admin/accidents/${id}/evidence`);
+
+export const adminGetAccidentAuditLogs = (id: string) =>
+  request.get(`/admin/accidents/${id}/audit-logs`);
+
+export const adminGetAppealList = (params: any) =>
+  request.get('/admin/appeals', { params });
+
+export const adminGetAppealDetail = (id: string) =>
+  request.get(`/admin/appeals/${id}`);
+
+export const adminReviewAppeal = (id: string, data: any) =>
+  request.put(`/admin/appeals/${id}/review`, data);
+
+export const adminBatchExportCertificates = (ids: string[]) =>
+  request.post('/admin/certificates/batch-export', { ids });
+
+export const adminGetCertificatePdfUrl = (id: string) =>
+  request.get(`/admin/certificates/${id}/pdf-url`);
+
+export const adminPushToPolice = (accidentId: string) =>
+  request.post(`/admin/push/${accidentId}`);
+
+export const adminGetDashboardStatistics = (days?: number) =>
+  request.get('/admin/dashboard/statistics', { params: { days } });
+
+export const adminGetDailyTrend = (days?: number) =>
+  request.get('/admin/dashboard/daily-trend', { params: { days } });
+
+export const adminGetTypeDistribution = () =>
+  request.get('/admin/dashboard/type-distribution');
+
+export const getAuditLogList = (params: any) =>
+  request.get('/audit-log/list', { params });
+
+export const getAuditLogByAccident = (accidentId: string) =>
+  request.get(`/audit-log/by-accident/${accidentId}`);
+
+export const getRecentAuditLogs = (count?: number) =>
+  request.get('/audit-log/recent', { params: { count } });
