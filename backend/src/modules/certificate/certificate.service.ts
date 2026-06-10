@@ -10,6 +10,8 @@ import { PdfGeneratorService, CertificatePdfData } from './pdf-generator.service
 import { ElectronicSignatureService } from './electronic-signature.service';
 import { QrCodeService } from './qrcode.service';
 import { CloudStorageService } from '../evidence/cloud-storage.service';
+import { ThumbnailService } from './thumbnail.service';
+import { EmailService } from './email.service';
 
 @Injectable()
 export class CertificateService {
@@ -23,6 +25,8 @@ export class CertificateService {
     private electronicSignatureService: ElectronicSignatureService,
     private qrCodeService: QrCodeService,
     private cloudStorageService: CloudStorageService,
+    private thumbnailService: ThumbnailService,
+    private emailService: EmailService,
   ) {}
 
   private getApiBaseUrl(): string {
@@ -221,6 +225,10 @@ export class CertificateService {
     const updated = await this.certificateRepository.save(certificate);
     this.logger.log('PDF生成并上传完成: ' + uploadResult.url);
 
+    this.generateThumbnail(updated.id).catch((err) => {
+      this.logger.warn('缩略图异步生成失败: ' + err.message);
+    });
+
     return updated;
   }
 
@@ -335,17 +343,72 @@ export class CertificateService {
     return { valid: true, certificate, message: '核验通过' };
   }
 
-  async share(id: string): Promise<{ shareUrl: string; verifyCode: string; qrCodeUrl?: string }> {
+  async share(id: string): Promise<{
+    shareUrl: string;
+    verifyCode: string;
+    qrCodeUrl?: string;
+    thumbnailUrl?: string;
+    templateType?: string;
+    certificateNo?: string;
+    title?: string;
+    description?: string;
+  }> {
     const certificate = await this.findOne(id);
 
     const webBaseUrl = this.getWebBaseUrl();
     const shareUrl = webBaseUrl + '/verify?no=' + certificate.certificateNo + '&code=' + certificate.verifyCode;
 
+    const isAgreement = certificate.templateType === 'agreement';
+    const title = isAgreement ? '道路交通事故自行协商协议书' : '道路交通事故认定书';
+    const acc = (certificate.accident || {}) as any;
+    const description =
+      (acc.occurTime ? dayjs(acc.occurTime).format('YYYY-MM-DD') + ' ' : '') +
+      (acc.location || '') + ' · ' +
+      (acc.liabilityResult?.liabilityDescription || '已出具认定结果');
+
     return {
       shareUrl,
       verifyCode: certificate.verifyCode,
       qrCodeUrl: certificate.qrCodeUrl,
+      thumbnailUrl: certificate.thumbnailUrl,
+      templateType: certificate.templateType,
+      certificateNo: certificate.certificateNo,
+      title,
+      description,
     };
+  }
+
+  async generateThumbnail(id: string): Promise<CertificateEntity> {
+    const certificate = await this.findOne(id);
+    try {
+      const buf = await this.thumbnailService.generateThumbnail(certificate);
+      const key = (certificate.templateType === 'agreement' ? 'agreements' : 'certificates') + '/' + certificate.certificateNo + '_thumbnail.png';
+      const result = await this.cloudStorageService.uploadBuffer(buf, key, 'image/png');
+      certificate.thumbnailUrl = result.url;
+      return await this.certificateRepository.save(certificate);
+    } catch (e) {
+      this.logger.error('缩略图生成失败: ' + e.message);
+      return certificate;
+    }
+  }
+
+  async getThumbnail(id: string): Promise<{ url: string }> {
+    let certificate = await this.findOne(id);
+    if (!certificate.thumbnailUrl) {
+      certificate = await this.generateThumbnail(id);
+    }
+    return { url: certificate.thumbnailUrl };
+  }
+
+  async sendEmail(id: string, email: string): Promise<{ success: boolean; message: string; mockSent: boolean }> {
+    const certificate = await this.findOne(id);
+    let pdfBuffer: Buffer | undefined;
+    try {
+      pdfBuffer = await this.getPdfBuffer(id);
+    } catch (e) {
+      this.logger.warn('发送邮件时PDF获取失败，将不附带附件: ' + e.message);
+    }
+    return this.emailService.sendCertificate(email, certificate, pdfBuffer);
   }
 
   async download(id: string): Promise<{ url: string; qrCodeUrl?: string; templateType?: string }> {

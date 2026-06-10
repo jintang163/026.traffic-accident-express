@@ -55,6 +55,21 @@ function sendCertificate(id, phone) {
   return post(`/certificate/${id}/send`, { phone });
 }
 
+function getCertificateThumbnail(id) {
+  console.log('[Certificate] 获取认定书缩略图:', id);
+  return get(`/certificate/${id}/thumbnail`);
+}
+
+function regenerateCertificateThumbnail(id) {
+  console.log('[Certificate] 重新生成缩略图:', id);
+  return post(`/certificate/${id}/regenerate-thumbnail`, {});
+}
+
+function sendCertificateEmail(id, email) {
+  console.log('[Certificate] 发送认定书到邮箱:', id, email);
+  return post(`/certificate/${id}/send-email`, { email });
+}
+
 module.exports = {
   getCertificateList,
   getCertificateDetail,
@@ -66,5 +81,8 @@ module.exports = {
   regenerateCertificatePdf,
   getCertificateStatistics,
   printCertificate,
-  sendCertificate
+  sendCertificate,
+  getCertificateThumbnail,
+  regenerateCertificateThumbnail,
+  sendCertificateEmail
 };

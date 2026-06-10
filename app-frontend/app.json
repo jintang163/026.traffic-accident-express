@@ -8,7 +8,8 @@
     "pages/accident-detail/index",
     "pages/certificate-detail/index",
     "pages/certificate-verify/index",
-    "pages/verify/index"
+    "pages/verify/index",
+    "pages/appeal/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

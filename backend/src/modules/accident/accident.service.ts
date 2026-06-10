@@ -99,13 +99,20 @@ export class AccidentService {
     pageSize?: number;
     status?: string;
     userId?: string;
+    keyword?: string;
   }): Promise<{ list: AccidentEntity[]; total: number }> {
-    const { page = 1, pageSize = 10, status, userId } = params || {};
+    const { page = 1, pageSize = 10, status, userId, keyword } = params || {};
 
     const queryBuilder = this.accidentRepository
       .createQueryBuilder('accident')
       .leftJoinAndSelect('accident.vehicles', 'vehicles')
       .leftJoinAndSelect('accident.scenePhotos', 'scenePhotos')
+      .leftJoinAndMapOne(
+        'accident.certificate',
+        'certificate',
+        'c',
+        'c.accidentId = accident.id',
+      )
       .orderBy('accident.createdAt', 'DESC');
 
     if (status) {
@@ -114,6 +121,14 @@ export class AccidentService {
 
     if (userId) {
       queryBuilder.andWhere('accident.createdBy = :userId', { userId });
+    }
+
+    if (keyword) {
+      const kw = '%' + keyword.trim() + '%';
+      queryBuilder.andWhere(
+        '(accident.reportNo LIKE :kw OR vehicles.plateNo LIKE :kw)',
+        { kw },
+      );
     }
 
     const [list, total] = await queryBuilder
@@ -356,5 +371,38 @@ export class AccidentService {
     const prefix = 'BA' + dayjs().format('YYYYMMDD');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     return prefix + random;
+  }
+
+  getAppealWindow(accident: AccidentEntity): {
+    canAppeal: boolean;
+    deadline?: Date;
+    remainingHours?: number;
+    reason?: string;
+  } {
+    if (accident.status !== 'completed') {
+      return {
+        canAppeal: false,
+        reason: '事故尚未处理完成，暂不可申诉',
+      };
+    }
+    const determinedAt = accident.liabilityResult?.determinedAt
+      ? new Date(accident.liabilityResult.determinedAt)
+      : accident.updatedAt;
+    const deadline = dayjs(determinedAt).add(48, 'hour').toDate();
+    const remainingMs = deadline.getTime() - Date.now();
+
+    if (remainingMs <= 0) {
+      return {
+        canAppeal: false,
+        deadline,
+        remainingHours: 0,
+        reason: '已超过48小时申诉时效',
+      };
+    }
+    return {
+      canAppeal: true,
+      deadline,
+      remainingHours: Math.ceil(remainingMs / (1000 * 60 * 60)),
+    };
   }
 }

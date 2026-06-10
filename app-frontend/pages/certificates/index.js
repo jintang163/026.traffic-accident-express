@@ -1,159 +1,220 @@
-const { getCertificateList, verifyCertificate } = require('../../services/certificate');
+const { getAccidentList, getAccidentStatistics, getAppealWindow } = require('../../services/accident');
+const { getCertificateDetail, getCertificateThumbnail } = require('../../services/certificate');
+const { getAppealByAccidentId } = require('../../services/appeal');
+
+const statusMap = {
+  pending: { label: '处理中', cls: 'tag-warning' },
+  processing: { label: '处理中', cls: 'tag-warning' },
+  manual_review: { label: '人工复核中', cls: 'tag-warning' },
+  completed: { label: '已定责', cls: 'tag-success' },
+  closed: { label: '已完结', cls: 'tag-info' },
+};
 
 Page({
   data: {
     activeTab: 'all',
     tabs: [
       { key: 'all', label: '全部' },
-      { key: 'pending', label: '待处理' },
-      { key: 'completed', label: '已完成' }
+      { key: 'pending', label: '处理中' },
+      { key: 'processing', label: '已定责' },
+      { key: 'completed', label: '已完结' },
     ],
-    certificates: [],
+    keyword: '',
+    accidents: [],
     loading: false,
-    verifyCode: '',
-    showVerifyModal: false,
-    verifyResult: null
+    statistics: { total: 0, pending: 0, processing: 0, completed: 0 },
+    page: 1,
+    pageSize: 10,
+    total: 0,
   },
 
-  onLoad: function () {
+  onLoad() {
+    this.loadStatistics();
     this.loadData();
   },
 
-  onShow: function () {
+  onShow() {
+    this.loadStatistics();
     this.loadData();
   },
 
-  onPullDownRefresh: function () {
+  onPullDownRefresh() {
+    this.setData({ page: 1, accidents: [] });
+    this.loadStatistics();
     this.loadData();
     wx.stopPullDownRefresh();
   },
 
-  loadData: function () {
+  onReachBottom() {
+    if (this.data.list >= this.data.total) return;
+    this.setData({ page: this.data.page + 1 });
+    this.loadData(true);
+  },
+
+  loadStatistics() {
+    getAccidentStatistics()
+      .then((stats) => {
+        this.setData({ statistics: stats || this.data.statistics });
+      })
+      .catch(() => {});
+  },
+
+  loadData(append = false) {
     this.setData({ loading: true });
-    
-    getCertificateList({ status: this.data.activeTab }).then((res) => {
-      this.setData({
-        certificates: res.list || res.data || this.getMockCertificates(),
-        loading: false
+    const status = this.data.activeTab === 'all' ? '' : this.data.activeTab;
+    getAccidentList({
+      status,
+      keyword: this.data.keyword,
+      page: this.data.page,
+      pageSize: this.data.pageSize,
+    })
+      .then((res) => {
+        const rawList = (res && res.list) || [];
+        const list = rawList.map(this._mapAccident.bind(this));
+        this.setData({
+          accidents: append ? this.data.accidents.concat(list) : list,
+          total: res && res.total ? res.total : list.length,
+          loading: false,
+        });
+        list.forEach((a) => {
+          if (a.certificateId && !a.thumbnailUrl) {
+            this._loadThumbnail(a.id, a.certificateId);
+          }
+          if (a.status === 'completed') {
+            this._loadAppealInfo(a.id);
+            this._loadAppealWindow(a.id);
+          }
+        });
+      })
+      .catch((err) => {
+        console.error('[MyAccidents] 加载失败:', err);
+        this.setData({ loading: false, accidents: [] });
       });
-    }).catch((err) => {
-      console.error('[Certificates] 加载失败:', err);
-      this.setData({
-        certificates: this.getMockCertificates(),
-        loading: false
-      });
-    });
   },
 
-  getMockCertificates: function () {
-    return [
-      {
-        id: '1',
-        certificateNumber: 'RD202606080001',
-        accidentNumber: 'SG202606080001',
-        accidentTime: '2026-06-08 10:30',
-        location: '北京市朝阳区建国路88号',
-        partyA: '张三 · 京A12345',
-        partyB: '李四 · 沪B67890',
-        liability: '后车未保持安全车距，负全部责任',
-        status: 'completed',
-        statusText: '已完成',
-        createdAt: '2026-06-08 10:45',
-        verifyCode: 'A1B2C3'
-      },
-      {
-        id: '2',
-        certificateNumber: 'RD202606070002',
-        accidentNumber: 'SG202606070002',
-        accidentTime: '2026-06-07 14:20',
-        location: '北京市海淀区中关村大街1号',
-        partyA: '王五 · 粤C11111',
-        partyB: '赵六 · 浙D22222',
-        liability: '变道车辆未观察，负主要责任',
-        status: 'pending',
-        statusText: '待确认',
-        createdAt: '2026-06-07 14:35',
-        verifyCode: 'D4E5F6'
-      }
-    ];
+  _mapAccident(acc) {
+    const vehicles = acc.vehicles || [];
+    const parties = vehicles
+      .map((v) => (v.ownerName || '当事人') + ' · ' + (v.plateNo || ''))
+      .filter(Boolean);
+    const liability = (acc.liabilityResult && acc.liabilityResult.liabilityDescription) || '';
+    const st = statusMap[acc.status] || { label: acc.status, cls: 'tag-warning' };
+    const cert = acc.certificate || null;
+    const certificateId = cert ? cert.id : (acc.certificateId || null);
+    const thumbnailUrl = cert ? cert.thumbnailUrl : null;
+    const pdfUrl = cert ? cert.pdfUrl : null;
+    return {
+      id: acc.id,
+      reportNo: acc.reportNo,
+      accidentTime: acc.occurTime,
+      location: acc.location,
+      partyA: parties[0] || '',
+      partyB: parties[1] || '',
+      parties,
+      liability,
+      status: acc.status,
+      statusText: st.label,
+      statusCls: st.cls,
+      createdAt: acc.createdAt,
+      certificateId,
+      certificateNo: cert ? cert.certificateNo : '',
+      templateType: cert ? cert.templateType : '',
+      thumbnailUrl,
+      pdfUrl,
+      canAppeal: null,
+      appealWindowText: '',
+      existingAppeal: null,
+    };
   },
 
-  switchTab: function (e) {
-    const key = e.currentTarget.dataset.key;
-    this.setData({ activeTab: key });
+  _loadThumbnail(accidentId, certificateId) {
+    if (!certificateId) return;
+    getCertificateThumbnail(certificateId)
+      .then((res) => {
+        if (!res || !res.url) return;
+        const accidents = this.data.accidents.slice();
+        const i = accidents.findIndex((a) => a.id === accidentId);
+        if (i >= 0) {
+          accidents[i].thumbnailUrl = res.url;
+          this.setData({ accidents });
+        }
+      })
+      .catch(() => {});
+  },
+
+  _loadAppealInfo(accidentId) {
+    getAppealByAccidentId(accidentId)
+      .then((appeal) => {
+        if (!appeal) return;
+        const accidents = this.data.accidents.slice();
+        const i = accidents.findIndex((a) => a.id === accidentId);
+        if (i >= 0) {
+          accidents[i].existingAppeal = appeal;
+          this.setData({ accidents });
+        }
+      })
+      .catch(() => {});
+  },
+
+  _loadAppealWindow(accidentId) {
+    getAppealWindow(accidentId)
+      .then((w) => {
+        const accidents = this.data.accidents.slice();
+        const i = accidents.findIndex((a) => a.id === accidentId);
+        if (i >= 0) {
+          accidents[i].canAppeal = !!w.canAppeal;
+          if (w.canAppeal) {
+            accidents[i].appealWindowText = '剩余 ' + (w.remainingHours || 0) + ' 小时';
+          } else {
+            accidents[i].appealWindowText = w.reason || '';
+          }
+          this.setData({ accidents });
+        }
+      })
+      .catch(() => {});
+  },
+
+  switchTab(e) {
+    this.setData({ activeTab: e.currentTarget.dataset.key, page: 1, accidents: [] });
     this.loadData();
   },
 
-  goToDetail: function (e) {
+  onKeywordInput(e) {
+    this.setData({ keyword: e.detail.value });
+  },
+
+  doSearch() {
+    this.setData({ page: 1, accidents: [] });
+    this.loadData();
+  },
+
+  goToDetail(e) {
     const id = e.currentTarget.dataset.id;
-    wx.navigateTo({
-      url: `/pages/certificate-detail/index?id=${id}`
-    });
+    wx.navigateTo({ url: '/pages/accident-detail/index?id=' + id });
   },
 
-  showVerify: function () {
-    this.setData({ 
-      showVerifyModal: true,
-      verifyCode: '',
-      verifyResult: null
-    });
-  },
-
-  hideVerify: function () {
-    this.setData({ showVerifyModal: false });
-  },
-
-  onVerifyInput: function (e) {
-    this.setData({ verifyCode: e.detail.value.toUpperCase() });
-  },
-
-  doVerify: function () {
-    if (!this.data.verifyCode) {
-      wx.showToast({
-        title: '请输入核验码',
-        icon: 'none'
-      });
-      return;
+  goToCertificate(e) {
+    const { id, cid } = e.currentTarget.dataset;
+    if (cid) {
+      wx.navigateTo({ url: '/pages/certificate-detail/index?id=' + cid });
+    } else {
+      wx.navigateTo({ url: '/pages/accident-detail/index?id=' + id });
     }
-
-    verifyCertificate(this.data.verifyCode).then((res) => {
-      this.setData({ verifyResult: res });
-      wx.showToast({
-        title: '核验成功',
-        icon: 'success'
-      });
-    }).catch((err) => {
-      console.error('[Certificates] 核验失败:', err);
-      this.setData({
-        verifyResult: {
-          valid: false,
-          message: '核验码无效或认定书不存在'
-        }
-      });
-    });
   },
 
-  shareCertificate: function (e) {
-    e.stopPropagation();
+  goToAppeal(e) {
     const id = e.currentTarget.dataset.id;
-    wx.showShareMenu({
-      withShareTicket: true
-    });
+    wx.navigateTo({ url: '/pages/appeal/index?accidentId=' + id });
   },
 
-  downloadCertificate: function (e) {
-    e.stopPropagation();
-    const id = e.currentTarget.dataset.id;
-    wx.showToast({
-      title: '下载功能开发中',
-      icon: 'none'
-    });
+  goVerify() {
+    wx.navigateTo({ url: '/pages/verify/index' });
   },
 
-  onShareAppMessage: function () {
+  onShareAppMessage() {
     return {
-      title: '交通事故电子认定书',
-      path: '/pages/certificates/index'
+      title: '交通事故快速处理 · 我的事故',
+      path: '/pages/home/index',
     };
-  }
+  },
 });

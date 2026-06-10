@@ -8,6 +8,8 @@ import { EvidenceModule } from '../evidence/evidence.module';
 import { PdfGeneratorService } from './pdf-generator.service';
 import { ElectronicSignatureService } from './electronic-signature.service';
 import { QrCodeService } from './qrcode.service';
+import { ThumbnailService } from './thumbnail.service';
+import { EmailService } from './email.service';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { QrCodeService } from './qrcode.service';
     PdfGeneratorService,
     ElectronicSignatureService,
     QrCodeService,
+    ThumbnailService,
+    EmailService,
   ],
   exports: [CertificateService],
 })

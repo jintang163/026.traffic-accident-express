@@ -1,16 +1,47 @@
 <view class="page">
   <view class="header">
     <view class="header-content">
-      <text class="header-title">我的认定书</text>
-      <view class="verify-btn" bindtap="showVerify">
+      <text class="header-title">我的事故</text>
+      <view class="verify-btn" bindtap="goVerify">
         <text class="verify-icon">🔍</text>
         <text class="verify-text">核验</text>
       </view>
     </view>
-    
-    <view class="tabs">
-      <view 
-        wx:for="{{tabs}}" 
+
+    <view class="search-bar">
+      <input
+        class="search-input"
+        placeholder="搜索事故编号或车牌号"
+        value="{{keyword}}"
+        bindinput="onKeywordInput"
+        confirm-type="search"
+        bindconfirm="doSearch"
+      />
+      <view class="search-btn" bindtap="doSearch">搜索</view>
+    </view>
+
+    <view class="stats-row">
+      <view class="stat-item">
+        <text class="stat-num">{{statistics.total || 0}}</text>
+        <text class="stat-label">全部</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{statistics.pending || 0}}</text>
+        <text class="stat-label">处理中</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{statistics.processing || (statistics.completed || 0)}}</text>
+        <text class="stat-label">已定责</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{statistics.completed || 0}}</text>
+        <text class="stat-label">已完结</text>
+      </view>
+    </view>
+
+    <scroll-view class="tabs" scroll-x>
+      <view
+        wx:for="{{tabs}}"
         wx:key="key"
         class="tab {{activeTab === item.key ? 'active' : ''}}"
         bindtap="switchTab"
@@ -18,106 +49,100 @@
       >
         {{item.label}}
       </view>
-    </view>
+    </scroll-view>
   </view>
 
   <view class="container">
-    <view wx:if="{{loading}}" class="loading-container">
+    <view wx:if="{{loading && accidents.length === 0}}" class="loading-container">
       <view class="loading"></view>
       <text class="loading-text">加载中...</text>
     </view>
-    
-    <view wx:elif="{{certificates.length === 0}}" class="empty">
-      <text class="empty-icon">📄</text>
-      <text class="empty-text">暂无认定书记录</text>
-    </view>
-    
-    <view wx:else>
-      <view 
-        wx:for="{{certificates}}" 
-        wx:key="id"
-        class="cert-card card"
-        bindtap="goToDetail"
-        data-id="{{item.id}}"
-      >
-        <view class="cert-header">
-          <view class="cert-number">
-            <text class="cert-icon">📜</text>
-            <text class="cert-number-text">{{item.certificateNumber}}</text>
-          </view>
-          <text class="tag {{item.status === 'completed' ? 'tag-success' : 'tag-warning'}}">
-            {{item.statusText}}
-          </text>
-        </view>
-        
-        <view class="cert-info">
-          <view class="info-row">
-            <text class="info-label">事故时间：</text>
-            <text class="info-value">{{item.accidentTime}}</text>
-          </view>
-          <view class="info-row">
-            <text class="info-label">事故地点：</text>
-            <text class="info-value ellipsis">{{item.location}}</text>
-          </view>
-          <view class="info-row">
-            <text class="info-label">当事人：</text>
-            <text class="info-value">{{item.partyA}}</text>
-          </view>
-          <view class="info-row">
-            <text class="info-label"></text>
-            <text class="info-value">{{item.partyB}}</text>
-          </view>
-        </view>
-        
-        <view class="cert-liability">
-          <text class="liability-label">责任认定：</text>
-          <text class="liability-text ellipsis-2">{{item.liability}}</text>
-        </view>
-        
-        <view class="cert-footer">
-          <text class="cert-date">生成时间：{{item.createdAt}}</text>
-          <view class="cert-actions">
-            <view class="action-btn" catchtap="shareCertificate" data-id="{{item.id}}">
-              <text>分享</text>
-            </view>
-            <view class="action-btn primary" catchtap="downloadCertificate" data-id="{{item.id}}">
-              <text>下载</text>
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
-    
-    <view class="safe-bottom"></view>
-  </view>
 
-  <view wx:if="{{showVerifyModal}}" class="modal-overlay" bindtap="hideVerify">
-    <view class="modal-content" catchtap="">
-      <view class="modal-header">
-        <text class="modal-title">认定书核验</text>
-        <text class="modal-close" bindtap="hideVerify">×</text>
-      </view>
-      
-      <view class="modal-body">
-        <text class="verify-desc">请输入认定书编号或核验码进行核验</text>
-        
-        <view class="form-item">
-          <input 
-            class="form-input" 
-            value="{{verifyCode}}"
-            bindinput="onVerifyInput"
-            placeholder="请输入核验码"
-            maxlength="12"
-          />
+    <view wx:elif="{{accidents.length === 0}}" class="empty">
+      <text class="empty-icon">�</text>
+      <text class="empty-text">暂无事故记录</text>
+      <text class="empty-hint">请通过首页发起报案</text>
+    </view>
+
+    <view wx:else>
+      <view
+        wx:for="{{accidents}}"
+        wx:key="id"
+        class="accident-card card"
+      >
+        <view class="card-header">
+          <view class="report">
+            <text class="report-label">事故编号</text>
+            <text class="report-value">{{item.reportNo}}</text>
+          </view>
+          <text class="tag {{item.statusCls}}">{{item.statusText}}</text>
         </view>
-        
-        <view wx:if="{{verifyResult}}" class="verify-result {{verifyResult.valid ? 'success' : 'error'}}">
-          <text class="result-icon">{{verifyResult.valid ? '✓' : '✗'}}</text>
-          <text class="result-text">{{verifyResult.message || (verifyResult.valid ? '认定书真实有效' : '核验失败')}}</text>
+
+        <view class="card-body" bindtap="goToDetail" data-id="{{item.id}}">
+          <view class="meta-row">
+            <text class="meta-label">时间</text>
+            <text class="meta-value">{{item.accidentTime}}</text>
+          </view>
+          <view class="meta-row">
+            <text class="meta-label">地点</text>
+            <text class="meta-value ellipsis">{{item.location}}</text>
+          </view>
+          <view class="meta-row">
+            <text class="meta-label">当事人</text>
+            <text class="meta-value">{{item.partyA}}</text>
+          </view>
+          <view class="meta-row" wx:if="{{item.partyB}}">
+            <text class="meta-label"></text>
+            <text class="meta-value">{{item.partyB}}</text>
+          </view>
+          <view class="liability-row" wx:if="{{item.liability}}">
+            <text class="liability-text ellipsis-2">{{item.liability}}</text>
+          </view>
         </view>
-        
-        <button class="btn btn-primary btn-block" bindtap="doVerify">开始核验</button>
+
+        <view class="cert-row" wx:if="{{item.thumbnailUrl || item.certificateNo}}">
+          <view class="cert-preview" catchtap="goToCertificate" data-id="{{item.id}}" data-cid="{{item.certificateId}}">
+            <image wx:if="{{item.thumbnailUrl}}" class="cert-img" src="{{item.thumbnailUrl}}" mode="aspectFit"></image>
+            <view wx:else class="cert-placeholder">
+              <text class="cert-ph">📜</text>
+            </view>
+            <view class="cert-info">
+              <text class="cert-title">{{item.templateType === 'agreement' ? '自行协商协议书' : '道路交通事故认定书'}}</text>
+              <text class="cert-no">{{item.certificateNo}}</text>
+              <text class="cert-action">点击查看详情 ></text>
+            </view>
+          </view>
+        </view>
+
+        <view class="appeal-row" wx:if="{{item.status === 'completed'}}">
+          <view wx:if="{{item.existingAppeal}}" class="appeal-has">
+            <text class="appeal-has-label">申诉中</text>
+            <text class="appeal-has-status">{{item.existingAppeal.status === 'pending' ? '待审核' : item.existingAppeal.status === 'reviewing' ? '人工复核中' : item.existingAppeal.status === 'approved' ? '申诉通过' : item.existingAppeal.status === 'rejected' ? '申诉驳回' : '已撤回'}}</text>
+          </view>
+          <view wx:elif="{{item.canAppeal === true}}" class="appeal-can" catchtap="goToAppeal" data-id="{{item.id}}">
+            <text class="appeal-can-icon">⚖️</text>
+            <text class="appeal-can-text">对定责有异议？发起申诉</text>
+            <text class="appeal-can-time">{{item.appealWindowText}}</text>
+          </view>
+          <view wx:elif="{{item.canAppeal === false}}" class="appeal-cannot">
+            <text>{{item.appealWindowText || '已超过申诉时效'}}</text>
+          </view>
+        </view>
+
+        <view class="card-footer">
+          <text class="foot-date">创建时间：{{item.createdAt}}</text>
+          <view class="foot-actions">
+            <view class="foot-btn" catchtap="goToDetail" data-id="{{item.id}}">
+              <text>查看详情</text>
+            </view>
+            <view wx:if="{{item.certificateId}}" class="foot-btn primary" catchtap="goToCertificate" data-id="{{item.id}}" data-cid="{{item.certificateId}}">
+              <text>认定书</text>
+            </view>
+          </view>
+        </view>
       </view>
     </view>
+
+    <view class="safe-bottom"></view>
   </view>
 </view>

@@ -1,4 +1,49 @@
 <view class="container" wx:if="{{certificate}}">
+  <view class="preview-card" bindtap="previewThumbnail">
+    <view class="preview-header">
+      <text class="preview-title">{{certificate.templateType === 'agreement' ? '自行协商协议书' : '道路交通事故认定书'}}</text>
+      <view class="preview-status status-{{certificate.status}}">{{certificate.statusText}}</view>
+    </view>
+    <view class="preview-body">
+      <block wx:if="{{thumbnailUrl}}">
+        <image src="{{thumbnailUrl}}" class="preview-img" mode="aspectFit"></image>
+      </block>
+      <block wx:else>
+        <view class="preview-placeholder">
+          <text class="preview-icon">📄</text>
+          <text class="preview-tip">缩略图生成中，点击预览</text>
+        </view>
+      </block>
+    </view>
+    <view class="preview-footer">
+      <text class="preview-no">编号：{{certificate.certificateNo || certificate.certificateNumber}}</text>
+      <text class="preview-action" catchtap="regenerateThumbnail">重新生成</text>
+    </view>
+  </view>
+
+  <view class="quick-actions">
+    <view class="quick-item" bindtap="doDownload">
+      <text class="quick-icon">📥</text>
+      <text class="quick-text">下载PDF</text>
+    </view>
+    <view class="quick-item" bindtap="saveToAlbum">
+      <text class="quick-icon">🖼️</text>
+      <text class="quick-text">保存相册</text>
+    </view>
+    <view class="quick-item" bindtap="openSharePanel">
+      <text class="quick-icon">📤</text>
+      <text class="quick-text">微信分享</text>
+    </view>
+    <view class="quick-item" bindtap="showSend">
+      <text class="quick-icon">✉️</text>
+      <text class="quick-text">发送邮箱</text>
+    </view>
+    <view class="quick-item" bindtap="goToAppeal">
+      <text class="quick-icon">⚖️</text>
+      <text class="quick-text">发起申诉</text>
+    </view>
+  </view>
+
   <view class="cert-header">
     <view class="cert-title">
       <text class="title-main">道路交通事故认定书</text>
@@ -240,12 +285,62 @@
   <view class="modal-mask" bindtap="hideSend"></view>
   <view class="modal-content">
     <view class="modal-title">发送认定书</view>
-    <view class="modal-desc">输入手机号，认定书将以短信形式发送</view>
-    <input class="modal-input" type="number" placeholder="请输入接收手机号" value="{{sendPhone}}" bindinput="onPhoneInput" maxlength="11" />
+    <view class="modal-tabs">
+      <view class="modal-tab {{sendMode === 'phone' ? 'active' : ''}}" bindtap="switchSendMode" data-mode="phone">短信</view>
+      <view class="modal-tab {{sendMode === 'email' ? 'active' : ''}}" bindtap="switchSendMode" data-mode="email">邮箱</view>
+    </view>
+    <block wx:if="{{sendMode === 'phone'}}">
+      <view class="modal-desc">输入手机号，认定书链接将以短信形式发送</view>
+      <input class="modal-input" type="number" placeholder="请输入接收手机号" value="{{sendPhone}}" bindinput="onPhoneInput" maxlength="11" />
+    </block>
+    <block wx:else>
+      <view class="modal-desc">输入邮箱地址，认定书PDF将以邮件附件发送</view>
+      <input class="modal-input" placeholder="请输入邮箱地址" value="{{sendEmail}}" bindinput="onEmailInput" />
+    </block>
     <view class="modal-actions">
       <button class="modal-btn modal-cancel" bindtap="hideSend">取消</button>
       <button class="modal-btn modal-confirm" bindtap="doSend">发送</button>
     </view>
+  </view>
+</view>
+
+<view class="share-modal" wx:if="{{showSharePanel}}">
+  <view class="modal-mask" bindtap="closeSharePanel"></view>
+  <view class="share-content">
+    <view class="share-title">分享认定书</view>
+    <view class="share-grid">
+      <button class="share-item" open-type="share">
+        <view class="share-icon-box" style="background:linear-gradient(135deg,#1E5EFA,#4080FF)">
+          <text class="share-icon">👥</text>
+        </view>
+        <text class="share-label">微信好友</text>
+      </button>
+      <view class="share-item" bindtap="shareWechatMoments">
+        <view class="share-icon-box" style="background:linear-gradient(135deg,#00B42A,#23C343)">
+          <text class="share-icon">🌐</text>
+        </view>
+        <text class="share-label">朋友圈</text>
+      </view>
+      <view class="share-item" bindtap="saveToAlbum">
+        <view class="share-icon-box" style="background:linear-gradient(135deg,#FF7D00,#FF9A2E)">
+          <text class="share-icon">🖼️</text>
+        </view>
+        <text class="share-label">保存相册</text>
+      </view>
+      <view class="share-item" bindtap="showSend">
+        <view class="share-icon-box" style="background:linear-gradient(135deg,#722ED1,#9254DE)">
+          <text class="share-icon">✉️</text>
+        </view>
+        <text class="share-label">发送邮箱</text>
+      </view>
+      <view class="share-item" bindtap="doDownload">
+        <view class="share-icon-box" style="background:linear-gradient(135deg,#0FC6C2,#35CFCB)">
+          <text class="share-icon">📄</text>
+        </view>
+        <text class="share-label">下载PDF</text>
+      </view>
+    </view>
+    <view class="share-cancel" bindtap="closeSharePanel">取消</view>
   </view>
 </view>
 

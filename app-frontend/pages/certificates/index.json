@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "认定书",
+  "navigationBarTitleText": "我的事故",
   "enablePullDownRefresh": true,
-  "backgroundColor": "#F5F7FA"
+  "onReachBottomDistance": 50
 }

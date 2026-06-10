@@ -7,6 +7,8 @@ import { AccidentModule } from './modules/accident/accident.module';
 import { OcrModule } from './modules/ocr/ocr.module';
 import { CertificateModule } from './modules/certificate/certificate.module';
 import { EvidenceModule } from './modules/evidence/evidence.module';
+import { AppealModule } from './modules/appeal/appeal.module';
+import { SecurityModule } from './modules/security/security.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { EvidenceModule } from './modules/evidence/evidence.module';
     OcrModule,
     CertificateModule,
     EvidenceModule,
+    AppealModule,
+    SecurityModule,
   ],
 })
 export class AppModule {}

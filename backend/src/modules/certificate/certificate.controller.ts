@@ -371,4 +371,43 @@ body{background:linear-gradient(135deg,#eef2ff 0%,#f0f9ff 100%);font-family:-app
       message: '发送成功',
     };
   }
+
+  @Get(':id/thumbnail')
+  async getThumbnail(@Param('id') id: string) {
+    const result = await this.certificateService.getThumbnail(id);
+    return {
+      success: true,
+      data: result,
+      message: '获取成功',
+    };
+  }
+
+  @Post(':id/regenerate-thumbnail')
+  async regenerateThumbnail(@Param('id') id: string) {
+    const cert = await this.certificateService.generateThumbnail(id);
+    return {
+      success: true,
+      data: { thumbnailUrl: cert.thumbnailUrl },
+      message: '缩略图生成成功',
+    };
+  }
+
+  @Post(':id/send-email')
+  async sendEmail(
+    @Param('id') id: string,
+    @Body('email') email: string,
+  ) {
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      return {
+        success: false,
+        message: '邮箱格式不正确',
+      };
+    }
+    const result = await this.certificateService.sendEmail(id, email);
+    return {
+      success: result.success,
+      data: { mockSent: result.mockSent },
+      message: result.message,
+    };
+  }
 }

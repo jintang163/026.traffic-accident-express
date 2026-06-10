@@ -1,0 +1,181 @@
+<view class="page">
+  <view wx:if="{{existingAppeal}}" class="tip-box tip-warn">
+    <text class="tip-icon">ℹ️</text>
+    <text class="tip-text">该事故已有申诉记录，当前状态：{{existingAppeal.status === 'pending' ? '待审核' : existingAppeal.status === 'reviewing' ? '人工复核中' : existingAppeal.status === 'approved' ? '申诉通过' : existingAppeal.status === 'rejected' ? '申诉驳回' : '已撤回'}}</text>
+  </view>
+
+  <view wx:if="{{appealWindow && !appealWindow.canAppeal}}" class="tip-box tip-error">
+    <text class="tip-icon">⚠️</text>
+    <text class="tip-text">{{appealWindow.reason || '当前不可申诉'}}</text>
+  </view>
+
+  <block wx:if="{{!existingAppeal && (!appealWindow || appealWindow.canAppeal)}}">
+    <view class="step-bar">
+      <view class="step-item {{step >= 1 ? 'active' : ''}}">
+        <text class="step-num">1</text>
+        <text class="step-label">申诉理由与证据</text>
+      </view>
+      <view class="step-line {{step >= 2 ? 'active' : ''}}"></view>
+      <view class="step-item {{step >= 2 ? 'active' : ''}}">
+        <text class="step-num">2</text>
+        <text class="step-label">身份验证</text>
+      </view>
+    </view>
+
+    <block wx:if="{{step === 1}}">
+      <view class="section card">
+        <view class="sec-title">申诉理由 <text class="required">*</text></view>
+        <textarea
+          class="textarea"
+          placeholder="请详细描述您对定责结果的异议（不少于10字）"
+          maxlength="1000"
+          value="{{reason}}"
+          bindinput="onReasonInput"
+        ></textarea>
+      </view>
+
+      <view class="section card">
+        <view class="sec-title">争议焦点（可多选）</view>
+        <view class="chip-wrap">
+          <view
+            wx:for="{{disputedOptions}}"
+            wx:key="key"
+            class="chip {{disputedPoints.indexOf(item.key) >= 0 ? 'active' : ''}}"
+            bindtap="onDisputedTap"
+            data-key="{{item.key}}"
+          >
+            {{item.label}}
+          </view>
+        </view>
+      </view>
+
+      <view class="section card">
+        <view class="sec-title">行车记录仪视频</view>
+        <view class="uploader" bindtap="chooseVideo">
+          <block wx:if="{{!dashcamVideoUrl}}">
+            <text class="upload-plus">+</text>
+            <text class="upload-tip">上传行车记录仪视频</text>
+            <text class="upload-hint">支持 MP4 / MOV，最大 200MB</text>
+          </block>
+          <block wx:else>
+            <text class="upload-plus">🎬</text>
+            <text class="upload-tip">已选择视频</text>
+            <text class="upload-hint">点击重新选择</text>
+          </block>
+        </view>
+        <input
+          wx:if="{{dashcamVideoUrl}}"
+          class="link-input"
+          placeholder="视频直链URL，若未上传可直接填写"
+          value="{{dashcamVideoUrl}}"
+          bindinput="onVideoInput"
+        />
+      </view>
+
+      <view class="section card">
+        <view class="sec-title">补充证据照片（最多9张）</view>
+        <view class="photo-wrap">
+          <view wx:for="{{evidencePhotoUrls}}" wx:key="*this" class="photo-item">
+            <image src="{{item}}" class="photo" mode="aspectFill"></image>
+            <text class="photo-remove" catchtap="removePhoto" data-index="{{index}}">×</text>
+          </view>
+          <view wx:if="{{evidencePhotoUrls.length < 9}}" class="photo-add" bindtap="choosePhotos">
+            <text class="photo-add-plus">+</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section card">
+        <view class="sec-title">补充说明</view>
+        <textarea
+          class="textarea"
+          placeholder="其他需要说明的情况（选填）"
+          maxlength="1000"
+          value="{{additionalDescription}}"
+          bindinput="onDescInput"
+        ></textarea>
+      </view>
+
+      <view class="btn-bar">
+        <button class="btn btn-primary btn-block" bindtap="nextStep" disabled="{{!appealWindow || !appealWindow.canAppeal}}">下一步：身份验证</button>
+      </view>
+    </block>
+
+    <block wx:if="{{step === 2}}">
+      <view class="section card">
+        <view class="sec-title">安全验证方式</view>
+        <view class="method-row">
+          <view class="method {{verifyMethod === 'sms' ? 'active' : ''}}" bindtap="switchMethod" data-method="sms">
+            <text class="method-icon">💬</text>
+            <view class="method-info">
+              <text class="method-title">短信验证码</text>
+              <text class="method-desc">向绑定手机号发送6位验证码</text>
+            </view>
+            <view class="method-check {{verifyMethod === 'sms' ? 'checked' : ''}}"></view>
+          </view>
+          <view class="method {{verifyMethod === 'face' ? 'active' : ''}}" bindtap="switchMethod" data-method="face">
+            <text class="method-icon">👤</text>
+            <view class="method-info">
+              <text class="method-title">人脸识别</text>
+              <text class="method-desc">公安人脸核身，防止他人冒用</text>
+            </view>
+            <view class="method-check {{verifyMethod === 'face' ? 'checked' : ''}}"></view>
+          </view>
+        </view>
+      </view>
+
+      <view class="section card" wx:if="{{verifyMethod === 'sms'}}">
+        <view class="sec-title">手机号</view>
+        <input
+          class="form-input"
+          placeholder="请输入手机号"
+          type="number"
+          maxlength="11"
+          value="{{phone}}"
+          bindinput="onPhoneInput"
+        />
+        <view class="sms-row">
+          <input
+            class="form-input sms-input"
+            placeholder="6位验证码"
+            type="number"
+            maxlength="6"
+            value="{{smsCode}}"
+            bindinput="onSmsCodeInput"
+          />
+          <button
+            class="sms-btn"
+            bindtap="sendCode"
+            disabled="{{countdown > 0}}"
+          >
+            {{countdown > 0 ? countdown + 's后重发' : '获取验证码'}}
+          </button>
+        </view>
+        <button class="btn btn-secondary btn-block" bindtap="verifySms">验证</button>
+      </view>
+
+      <view class="section card" wx:if="{{verifyMethod === 'face'}}">
+        <view class="sec-title">人脸核身</view>
+        <view class="face-tip">
+          <text>请确保光线充足，正对摄像头，完成眨眼、摇头等活体检测动作。</text>
+        </view>
+        <view wx:if="{{!faceVerified}}" class="face-wrap">
+          <view class="face-icon">👤</view>
+          <text class="face-hint">点击下方按钮开始人脸核身</text>
+        </view>
+        <view wx:else class="face-wrap passed">
+          <text class="face-pass-icon">✓</text>
+          <text class="face-pass-text">人脸核身通过</text>
+        </view>
+        <button wx:if="{{!faceVerified}}" class="btn btn-primary btn-block" bindtap="startFace">开始人脸核身</button>
+      </view>
+
+      <view class="btn-bar">
+        <button class="btn btn-secondary" bindtap="prevStep">上一步</button>
+        <button class="btn btn-primary flex-1" bindtap="submit" loading="{{submitting}}" disabled="{{!verifyToken}}">提交申诉</button>
+      </view>
+    </block>
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>

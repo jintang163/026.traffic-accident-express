@@ -67,7 +67,10 @@ export class CertificateEntity {
   pdfStorageKey: string;
 
   @Column({ length: 500, nullable: true })
-  qrCodeUrl: string;
+  qrCodeUrl?: string;
+
+  @Column({ length: 500, nullable: true })
+  thumbnailUrl?: string;
 
   @Column({ type: 'json', nullable: true })
   signatureInfo: {

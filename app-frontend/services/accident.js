@@ -137,6 +137,11 @@ function getAccidentStatistics() {
   return get('/accident/statistics');
 }
 
+function getAppealWindow(id) {
+  console.log('[Accident] 获取申诉时限:', id);
+  return get(`/accident/${id}/appeal-window`);
+}
+
 module.exports = {
   getAccidentList,
   getAccidentDetail,
@@ -148,5 +153,6 @@ module.exports = {
   updateAccident,
   deleteAccident,
   generateCertificate,
-  getAccidentStatistics
+  getAccidentStatistics,
+  getAppealWindow
 };

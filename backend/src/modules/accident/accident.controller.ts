@@ -45,7 +45,7 @@ export class AccidentController {
   }
 
   @Get('list')
-  async findAll(@Query() query: { page?: number; pageSize?: number; status?: string }, @Request() req) {
+  async findAll(@Query() query: { page?: number; pageSize?: number; status?: string; keyword?: string }, @Request() req) {
     const userId = req.user?.id;
     const result = await this.accidentService.findAll({
       ...query,
@@ -56,6 +56,17 @@ export class AccidentController {
       success: true,
       data: result,
       message: '获取成功',
+    };
+  }
+
+  @Get(':id/appeal-window')
+  async getAppealWindow(@Param('id') id: string) {
+    const accident = await this.accidentService.findOne(id);
+    const window = this.accidentService.getAppealWindow(accident);
+    return {
+      success: true,
+      data: window,
+      message: window.canAppeal ? '可在申诉期内发起申诉' : '不可申诉',
     };
   }
 
