@@ -1,4 +1,4 @@
-const { getCertificateDetail, verifyCertificate, shareCertificate, downloadCertificate, sendCertificate } = require('../../services/certificate');
+const { getCertificateDetail, verifyCertificate, shareCertificate, downloadCertificate, downloadCertificatePdf, regenerateCertificatePdf, sendCertificate } = require('../../services/certificate');
 
 Page({
   data: {
@@ -191,44 +191,71 @@ Page({
   },
 
   doDownload: function () {
-    wx.showLoading({ title: '生成中...' });
-    
+    wx.showLoading({ title: '准备下载...' });
+
     downloadCertificate(this.data.certificateId).then((res) => {
-      wx.hideLoading();
-      if (res.url) {
+      const pdfUrl = res.url;
+      if (pdfUrl) {
         wx.downloadFile({
-          url: res.url,
+          url: pdfUrl,
           success: (downloadRes) => {
+            wx.hideLoading();
             wx.openDocument({
               filePath: downloadRes.tempFilePath,
               showMenu: true,
+              fileType: 'pdf',
               success: () => {
                 wx.showToast({ title: '打开成功', icon: 'success' });
               },
               fail: () => {
-                wx.saveImageToPhotosAlbum({
-                  filePath: downloadRes.tempFilePath,
-                  success: () => {
-                    wx.showToast({ title: '已保存到相册', icon: 'success' });
-                  },
-                  fail: () => {
-                    wx.showToast({ title: '保存失败', icon: 'none' });
-                  }
-                });
+                wx.showToast({ title: '打开失败', icon: 'none' });
               }
             });
           },
           fail: () => {
+            wx.hideLoading();
             wx.showToast({ title: '下载失败', icon: 'none' });
           }
         });
       } else {
-        wx.showToast({ title: '下载功能开发中', icon: 'none' });
+        wx.hideLoading();
+        this.doRegeneratePdf();
       }
     }).catch(() => {
       wx.hideLoading();
-      wx.showToast({ title: '下载功能开发中', icon: 'none' });
+      this.doRegeneratePdf();
     });
+  },
+
+  doRegeneratePdf: function () {
+    wx.showLoading({ title: '生成PDF中...' });
+
+    regenerateCertificatePdf(this.data.certificateId).then((res) => {
+      wx.hideLoading();
+      if (res.data && res.data.pdfUrl) {
+        this.setData({
+          'certificate.pdfUrl': res.data.pdfUrl,
+          'certificate.qrCodeUrl': res.data.qrCodeUrl,
+          'certificate.signatureInfo': res.data.signatureInfo,
+          'certificate.pdfGeneratedAt': res.data.pdfGeneratedAt,
+        });
+        wx.showToast({ title: 'PDF生成成功', icon: 'success' });
+      } else {
+        wx.showToast({ title: 'PDF生成中，请稍后刷新', icon: 'none' });
+      }
+    }).catch(() => {
+      wx.hideLoading();
+      wx.showToast({ title: 'PDF生成失败', icon: 'none' });
+    });
+  },
+
+  previewQrCode: function () {
+    if (this.data.certificate?.qrCodeUrl) {
+      wx.previewImage({
+        urls: [this.data.certificate.qrCodeUrl],
+        current: this.data.certificate.qrCodeUrl
+      });
+    }
   },
 
   goToAccident: function () {

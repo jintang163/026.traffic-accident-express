@@ -30,6 +30,16 @@ function downloadCertificate(id) {
   return get(`/certificate/${id}/download`);
 }
 
+function downloadCertificatePdf(id) {
+  const baseUrl = getApp().globalData.baseUrl || 'http://localhost:3000/api';
+  return `${baseUrl}/certificate/${id}/pdf`;
+}
+
+function regenerateCertificatePdf(id) {
+  console.log('[Certificate] 重新生成PDF:', id);
+  return post(`/certificate/${id}/regenerate-pdf`, {});
+}
+
 function getCertificateStatistics() {
   console.log('[Certificate] 获取认定书统计');
   return get('/certificate/statistics');
@@ -52,6 +62,8 @@ module.exports = {
   verifyCertificate,
   shareCertificate,
   downloadCertificate,
+  downloadCertificatePdf,
+  regenerateCertificatePdf,
   getCertificateStatistics,
   printCertificate,
   sendCertificate

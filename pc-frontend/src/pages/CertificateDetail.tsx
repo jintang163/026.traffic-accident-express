@@ -1,7 +1,7 @@
-import { Card, Descriptions, Button, Space, Row, Col, Tag, Divider, Typography } from 'antd';
+import { Card, Descriptions, Button, Space, Row, Col, Tag, Divider, Typography, Image } from 'antd';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeftOutlined, PrinterOutlined, DownloadOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, PrinterOutlined, DownloadOutlined, ShareAltOutlined, SafetyCertificateOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getCertificateDetail, verifyCertificate } from '../api';
 
 const { Title, Paragraph } = Typography;
@@ -40,6 +40,16 @@ const CertificateDetail: React.FC = () => {
     status: 'confirmed',
     createdAt: '2026-06-08 10:40:00',
     verifyCode: 'A1B2C3D4E5',
+    pdfUrl: '',
+    qrCodeUrl: '',
+    signatureInfo: {
+      provider: 'mock',
+      sealType: 'police',
+      sealSn: 'SEAL1749000000000',
+      signedAt: '2026-06-08T10:40:00.000Z',
+      certificateSn: 'CERT1234567890ABCDEF',
+      isValid: true,
+    },
     partyA: {
       name: '张三',
       idNumber: '110***********1234',
@@ -68,7 +78,7 @@ const CertificateDetail: React.FC = () => {
     remarks: [
       '本认定书与纸质认定书具有同等法律效力',
       '当事人对认定有异议的，可在送达之日起三日内申请复核',
-      '本认定书可通过核验码进行核验真伪',
+      '本认定书可通过核验码或扫描二维码进行核验真伪',
     ],
   });
 
@@ -85,6 +95,36 @@ const CertificateDetail: React.FC = () => {
       setVerifyResult(res);
     } catch (error) {
       setVerifyResult({ valid: false, message: '核验失败' });
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    if (data?.pdfUrl) {
+      window.open(data.pdfUrl, '_blank');
+    } else if (id) {
+      const baseUrl = window.location.origin;
+      window.open(baseUrl + '/api/certificate/' + id + '/pdf', '_blank');
+    }
+  };
+
+  const handlePrint = () => {
+    if (id) {
+      const baseUrl = window.location.origin;
+      window.open(baseUrl + '/api/certificate/' + id + '/pdf', '_blank');
+    }
+  };
+
+  const handleRegeneratePdf = async () => {
+    if (!id) return;
+    try {
+      const baseUrl = window.location.origin;
+      const response = await fetch(baseUrl + '/api/certificate/' + id + '/regenerate-pdf', { method: 'POST' });
+      const result = await response.json();
+      if (result.success && result.data) {
+        setData({ ...data, ...result.data });
+      }
+    } catch (error) {
+      console.error('Regenerate PDF failed:', error);
     }
   };
 
@@ -201,7 +241,27 @@ const CertificateDetail: React.FC = () => {
               )}
             </Space>
           </div>
+          {data.qrCodeUrl && (
+            <div style={{ marginTop: 16, textAlign: 'center' }}>
+              <Image src={data.qrCodeUrl} width={150} height={150} alt="核验二维码" />
+              <div style={{ color: '#999', marginTop: 4, fontSize: 12 }}>扫描二维码核验真伪</div>
+            </div>
+          )}
         </div>
+
+        {data.signatureInfo && (
+          <>
+            <Divider />
+            <Title level={5}><SafetyCertificateOutlined style={{ marginRight: 8 }} />电子签章信息</Title>
+            <Descriptions column={2} bordered size="small" style={{ marginBottom: 20 }}>
+              <Descriptions.Item label="签章服务商">{data.signatureInfo.provider}</Descriptions.Item>
+              <Descriptions.Item label="印章类型">{data.signatureInfo.sealType === 'police' ? '交警部门印章' : '平台印章'}</Descriptions.Item>
+              <Descriptions.Item label="印章序列号">{data.signatureInfo.sealSn}</Descriptions.Item>
+              <Descriptions.Item label="证书序列号">{data.signatureInfo.certificateSn}</Descriptions.Item>
+              <Descriptions.Item label="签章时间" span={2}>{data.signatureInfo.signedAt}</Descriptions.Item>
+            </Descriptions>
+          </>
+        )}
 
         <Divider />
 
@@ -209,17 +269,18 @@ const CertificateDetail: React.FC = () => {
         <ul style={{ paddingLeft: 20 }}>
           {data.remarks?.map((remark: string, index: number) => (
             <li key={index} style={{ marginBottom: 8, color: '#666' }}>
-            {remark}
-          </li>
+              {remark}
+            </li>
           ))}
         </ul>
 
         <Divider />
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
-          <Button icon={<PrinterOutlined />}>打印</Button>
-          <Button icon={<DownloadOutlined />}>下载</Button>
+          <Button icon={<PrinterOutlined />} onClick={handlePrint}>打印</Button>
+          <Button icon={<DownloadOutlined />} onClick={handleDownloadPdf}>下载PDF</Button>
           <Button icon={<ShareAltOutlined />}>分享</Button>
+          <Button icon={<ReloadOutlined />} onClick={handleRegeneratePdf}>重新生成PDF</Button>
         </div>
       </Card>
     </div>

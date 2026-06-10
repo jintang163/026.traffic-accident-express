@@ -168,8 +168,36 @@
         </button>
         <view class="verify-result" wx:if="{{verified}}">
           <text class="verify-success" wx:if="{{verifyResult.valid}}">✅ 核验通过</text>
-          <text class="verify-fail" wx:else">❌ {{verifyResult.message}}</text>
+          <text class="verify-fail" wx:else>❌ {{verifyResult.message}}</text>
         </view>
+      </view>
+      <view class="qrcode-section" wx:if="{{certificate.qrCodeUrl}}">
+        <image class="qrcode-img" src="{{certificate.qrCodeUrl}}" mode="aspectFit" bindtap="previewQrCode"></image>
+        <text class="qrcode-tip">扫描二维码核验真伪</text>
+      </view>
+    </view>
+
+    <view class="section signature-section" wx:if="{{certificate.signatureInfo}}">
+      <view class="section-title">电子签章信息</view>
+      <view class="info-row">
+        <view class="info-label">签章服务商</view>
+        <view class="info-value">{{certificate.signatureInfo.provider}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">印章类型</view>
+        <view class="info-value">{{certificate.signatureInfo.sealType}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">印章序列号</view>
+        <view class="info-value">{{certificate.signatureInfo.sealSn}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">签章时间</view>
+        <view class="info-value">{{certificate.signatureInfo.signedAt}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">证书序列号</view>
+        <view class="info-value">{{certificate.signatureInfo.certificateSn}}</view>
       </view>
     </view>
     

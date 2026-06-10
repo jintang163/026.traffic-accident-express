@@ -271,6 +271,36 @@
   background: #F0F9FF;
   border-radius: 12rpx;
   border: 2rpx solid #91C5FF;
+  flex-wrap: wrap;
+}
+
+.qrcode-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 20rpx 8rpx;
+  width: 100%;
+}
+
+.qrcode-img {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 8rpx;
+}
+
+.qrcode-tip {
+  font-size: 22rpx;
+  color: #86909C;
+  margin-top: 8rpx;
+}
+
+.signature-section .info-row {
+  padding: 12rpx 0;
+}
+
+.signature-section .info-value {
+  font-size: 24rpx;
+  word-break: break-all;
 }
 
 .verify-info {

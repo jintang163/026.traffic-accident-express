@@ -55,6 +55,25 @@ export class CertificateEntity {
   @Column({ length: 500, nullable: true })
   pdfUrl: string;
 
+  @Column({ length: 500, nullable: true })
+  pdfStorageKey: string;
+
+  @Column({ length: 500, nullable: true })
+  qrCodeUrl: string;
+
+  @Column({ type: 'json', nullable: true })
+  signatureInfo: {
+    provider: string;
+    sealType: string;
+    sealSn: string;
+    signedAt: string;
+    certificateSn: string;
+    isValid: boolean;
+  };
+
+  @Column({ type: 'datetime', nullable: true })
+  pdfGeneratedAt: Date;
+
   @Column({ type: 'uuid', nullable: true })
   createdBy: string;
 
