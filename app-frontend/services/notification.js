@@ -47,31 +47,31 @@ async function getNotifications(params = {}) {
   if (type) query.push(`type=${type}`);
   if (isRead !== undefined) query.push(`isRead=${isRead}`);
 
-  return get(`/notifications?${query.join('&')}`);
+  return get(`/notification?${query.join('&')}`);
 }
 
 async function getUnreadCount() {
-  return get('/notifications/unread-count');
+  return get('/notification/unread-count');
 }
 
 async function markAsRead(id) {
-  return post('/notifications/mark-read', { id });
+  return post('/notification/mark-read', { id });
 }
 
 async function markAllAsRead() {
-  return post('/notifications/mark-read', { all: true });
+  return post('/notification/mark-read', { all: true });
 }
 
 async function retryNotification(id) {
-  return post(`/notifications/retry/${id}`);
+  return post(`/notification/retry/${id}`);
 }
 
 async function getSubscriptions() {
-  return get('/notifications/subscriptions');
+  return get('/notification/subscriptions');
 }
 
 async function subscribeTemplate(templateType, templateId, wechatEnabled = true, smsEnabled = true) {
-  return post('/notifications/subscriptions', {
+  return post('/notification/subscriptions', {
     templateType,
     templateId,
     wechatEnabled,
@@ -80,11 +80,11 @@ async function subscribeTemplate(templateType, templateId, wechatEnabled = true,
 }
 
 async function updateSubscription(id, data) {
-  return put(`/notifications/subscriptions/${id}`, data);
+  return put(`/notification/subscriptions/${id}`, data);
 }
 
 async function getTemplateConfigApi() {
-  return get('/notifications/templates/config');
+  return get('/notification/templates/config');
 }
 
 function requestSubscribeMessage(templateIds) {

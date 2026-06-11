@@ -157,24 +157,49 @@ export class NotificationService implements OnModuleInit {
 
     try {
       const channels = notification.channels || ['in_app'];
-      const promises: Promise<void>[] = [];
-
-      if (channels.includes('wechat_subscribe') && notification.openid) {
-        promises.push(this.sendWechatMessage(notification));
-      }
-
-      if (channels.includes('sms') && notification.phone) {
-        promises.push(this.sendSmsMessage(notification));
-      }
 
       if (channels.includes('in_app')) {
         notification.isRead = false;
       }
 
-      await Promise.all(promises);
+      let wechatSuccess = false;
+      let wechatAttempted = false;
 
-      notification.status = 'sent';
-      notification.sentAt = new Date();
+      if (channels.includes('wechat_subscribe') && notification.openid) {
+        wechatAttempted = true;
+        try {
+          await this.sendWechatMessage(notification);
+          wechatSuccess = true;
+        } catch (err) {
+          this.logger.warn(`Wechat push failed, will fallback to SMS: ${err.message}`);
+        }
+      }
+
+      const shouldSendSms = channels.includes('sms') && notification.phone && (!wechatAttempted || !wechatSuccess);
+
+      if (shouldSendSms) {
+        try {
+          await this.sendSmsMessage(notification);
+          if (!wechatAttempted) {
+            notification.smsResult = { ...(notification.smsResult || {}), fallback: false, primary: true };
+          } else {
+            notification.smsResult = { ...(notification.smsResult || {}), fallback: true };
+          }
+        } catch (smsErr) {
+          if (wechatAttempted && !wechatSuccess) {
+            throw new Error(`Both wechat and sms failed: ${smsErr.message}`);
+          }
+          throw smsErr;
+        }
+      }
+
+      if (wechatSuccess || shouldSendSms) {
+        notification.status = 'sent';
+        notification.sentAt = new Date();
+      } else {
+        notification.status = 'failed';
+        notification.errorMessage = 'No available notification channel';
+      }
     } catch (error) {
       this.logger.error(`Notification push failed: ${notification.id} - ${error.message}`);
       notification.status = 'failed';
@@ -185,11 +210,12 @@ export class NotificationService implements OnModuleInit {
     await this.notificationRepository.save(notification);
   }
 
-  private async sendWechatMessage(notification: NotificationEntity): Promise<void> {
+  private async sendWechatMessage(notification: NotificationEntity): Promise<boolean> {
     const templateType = TEMPLATE_TYPE_MAP[notification.type];
 
     if (!templateType || !notification.openid) {
-      return;
+      this.logger.debug(`Wechat skipped: no template type or openid`);
+      return false;
     }
 
     const subscription = await this.getUserSubscription(
@@ -199,7 +225,7 @@ export class NotificationService implements OnModuleInit {
 
     if (!subscription?.wechatEnabled || !subscription.templateId) {
       this.logger.warn(`Wechat subscription not enabled for user ${notification.userId}, template ${templateType}`);
-      return;
+      return false;
     }
 
     const data = notification.data || {};
@@ -218,20 +244,32 @@ export class NotificationService implements OnModuleInit {
 
     notification.wechatResult = result as any;
 
-    if (!result.success) {
-      this.logger.warn(`Wechat message failed: ${result.errmsg}`);
-      if (notification.phone && notification.channels.includes('sms')) {
-        await this.mqService.send('sms_send', 'sms_fallback', {
-          notificationId: notification.id,
-        });
-      }
-    } else {
+    if (result.success) {
       this.incrementSubscriptionSentCount(notification.userId || '', templateType);
+      return true;
+    } else {
+      this.logger.warn(`Wechat message failed: ${result.errmsg}`);
+      return false;
     }
   }
 
-  private async sendSmsMessage(notification: NotificationEntity): Promise<void> {
-    if (!notification.phone) return;
+  private async sendSmsMessage(notification: NotificationEntity): Promise<boolean> {
+    if (!notification.phone) {
+      this.logger.debug(`SMS skipped: no phone`);
+      return false;
+    }
+
+    const templateType = TEMPLATE_TYPE_MAP[notification.type];
+    if (templateType) {
+      const subscription = await this.getUserSubscription(
+        notification.userId || '',
+        templateType,
+      );
+      if (subscription && !subscription.smsEnabled) {
+        this.logger.warn(`SMS disabled by user ${notification.userId}, template ${templateType}`);
+        return false;
+      }
+    }
 
     const templateCode = SMS_TEMPLATE_MAP[notification.type];
     const data = notification.data || {};
@@ -249,9 +287,11 @@ export class NotificationService implements OnModuleInit {
 
     notification.smsResult = result as any;
 
-    if (!result.success) {
+    if (result.success) {
+      return true;
+    } else {
       this.logger.warn(`SMS send failed: ${result.message}`);
-      throw new Error(result.message || 'SMS send failed');
+      return false;
     }
   }
 
