@@ -1,0 +1,53 @@
+<view class="container">
+  <view class="type-tabs">
+    <scroll-view scroll-x="true" class="tabs-scroll">
+      <view class="tabs-wrapper">
+        <view
+          wx:for="{{typeOptions}}"
+          wx:key="value"
+          class="tab-item {{currentType === item.value ? 'active' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onTypeChange"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </scroll-view>
+    <view class="mark-all-btn" bindtap="onMarkAllRead">
+      全部已读
+    </view>
+  </view>
+
+  <view class="notification-list" wx:if="{{notifications.length > 0}}">
+    <view
+      wx:for="{{notifications}}"
+      wx:key="id"
+      class="notification-item {{item.isRead ? 'read' : 'unread'}}"
+      data-item="{{item}}"
+      bindtap="onItemTap"
+    >
+      <view class="unread-dot" wx:if="{{!item.isRead}}"></view>
+      <view class="item-header">
+        <text class="item-type">{{item.typeText}}</text>
+        <text class="item-time">{{item.timeText}}</text>
+      </view>
+      <view class="item-title">{{item.title}}</view>
+      <view class="item-content">{{item.content}}</view>
+      <view class="item-footer" wx:if="{{item.accidentReportNo}}">
+        <text class="report-no">事故编号: {{item.accidentReportNo}}</text>
+      </view>
+    </view>
+
+    <view class="load-more" wx:if="{{hasMore}}">
+      <text>{{loading ? '加载中...' : '上拉加载更多'}}</text>
+    </view>
+    <view class="no-more" wx:elif="{{notifications.length > 0}}">
+      <text>没有更多了</text>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <view class="empty-icon">📭</view>
+    <view class="empty-text">{{loading ? '加载中...' : '暂无通知消息'}}</view>
+  </view>
+</view>

@@ -1,5 +1,6 @@
 const { getAccidentList } = require('../../services/accident');
 const { getCertificateList } = require('../../services/certificate');
+const { getUnreadCount } = require('../../services/notification');
 const { post } = require('../../utils/request');
 
 Page({
@@ -26,6 +27,13 @@ Page({
         ]
       },
       {
+        title: '消息通知',
+        items: [
+          { icon: '🔔', label: '通知中心', key: 'notifications', badge: 0 },
+          { icon: '⚙️', label: '消息设置', key: 'notification-settings', badge: 0 }
+        ]
+      },
+      {
         title: '工具服务',
         items: [
           { icon: '🔍', label: '认定书核验', key: 'verify', badge: 0 },
@@ -36,7 +44,7 @@ Page({
       {
         title: '系统设置',
         items: [
-          { icon: '⚙️', label: '账号设置', key: 'settings', badge: 0 },
+          { icon: '👤', label: '账号设置', key: 'settings', badge: 0 },
           { icon: '🔒', label: '隐私政策', key: 'privacy', badge: 0 },
           { icon: '📜', label: '关于我们', key: 'about', badge: 0 }
         ]
@@ -91,10 +99,12 @@ Page({
     
     Promise.all([
       getAccidentList({ page: 1, pageSize: 100 }).catch(() => ({ list: [] })),
-      getCertificateList({ page: 1, pageSize: 100 }).catch(() => ({ list: [] }))
-    ]).then(([accidentRes, certRes]) => {
+      getCertificateList({ page: 1, pageSize: 100 }).catch(() => ({ list: [] })),
+      getUnreadCount().catch(() => ({ count: 0 }))
+    ]).then(([accidentRes, certRes, unreadRes]) => {
       const accidents = accidentRes.list || [];
       const certificates = certRes.list || [];
+      const unreadCount = unreadRes.count || 0;
       
       const completed = accidents.filter(a => a.status === 'completed').length;
       const pending = accidents.filter(a => a.status === 'pending' || a.status === 'processing').length;
@@ -107,6 +117,9 @@ Page({
           }
           if (item.key === 'my-certificates') {
             return { ...item, badge: certificates.length };
+          }
+          if (item.key === 'notifications') {
+            return { ...item, badge: unreadCount };
           }
           return item;
         })
@@ -237,6 +250,12 @@ Page({
         break;
       case 'my-vehicles':
         wx.showToast({ title: '功能开发中', icon: 'none' });
+        break;
+      case 'notifications':
+        wx.navigateTo({ url: '/pages/notifications/index' });
+        break;
+      case 'notification-settings':
+        wx.navigateTo({ url: '/pages/notification-settings/index' });
         break;
       case 'verify':
         wx.switchTab({ url: '/pages/certificates/index' });

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccidentController } from './accident.controller';
 import { AccidentService } from './accident.service';
@@ -7,10 +7,12 @@ import { VehicleEntity } from './vehicle.entity';
 import { PhotoEntity } from './photo.entity';
 import { LiabilityRuleEntity } from './liability-rule.entity';
 import { LiabilityRuleEngine } from './liability-rule-engine';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AccidentEntity, VehicleEntity, PhotoEntity, LiabilityRuleEntity]),
+    forwardRef(() => NotificationModule),
   ],
   controllers: [AccidentController],
   providers: [AccidentService, LiabilityRuleEngine],

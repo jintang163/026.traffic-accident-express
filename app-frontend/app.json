@@ -9,7 +9,9 @@
     "pages/certificate-detail/index",
     "pages/certificate-verify/index",
     "pages/verify/index",
-    "pages/appeal/index"
+    "pages/appeal/index",
+    "pages/notifications/index",
+    "pages/notification-settings/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

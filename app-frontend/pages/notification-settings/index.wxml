@@ -1,0 +1,64 @@
+<view class="container">
+  <view class="section">
+    <view class="section-title">通知类型</view>
+    <view class="section-desc">开启后，您将在相应节点收到通知提醒</view>
+
+    <view class="template-list">
+      <block wx:for="{{templateTypes}}" wx:key="*this">
+        <view class="template-item">
+          <view class="template-header">
+            <view class="template-icon">{{index === 0 ? '⚖️' : index === 1 ? '📄' : index === 2 ? '🔄' : '📷'}}</view>
+            <view class="template-info">
+              <view class="template-title">{{templateConfig[item].title}}</view>
+              <view class="template-desc">{{templateConfig[item].desc}}</view>
+            </view>
+          </view>
+
+          <view class="template-actions" wx:if="{{subscriptionMap && subscriptionMap[item]}}">
+            <view class="action-row">
+              <text class="action-label">微信通知</text>
+              <switch
+                checked="{{subscriptionMap[item].wechatEnabled}}"
+                color="#1890ff"
+                data-item="{{subscriptionMap[item]}}"
+                bindchange="onToggleWechat"
+              />
+            </view>
+            <view class="action-row">
+              <text class="action-label">短信通知</text>
+              <switch
+                checked="{{subscriptionMap[item].smsEnabled}}"
+                color="#1890ff"
+                data-item="{{subscriptionMap[item]}}"
+                bindchange="onToggleSms"
+              />
+            </view>
+            <view class="subscribe-info">
+              <text class="info-text">已订阅 {{subscriptionMap[item].sentCount || 0}} 次</text>
+            </view>
+          </view>
+
+          <view class="subscribe-btn-wrapper" wx:else>
+            <button
+              class="subscribe-btn"
+              data-type="{{item}}"
+              bindtap="onSubscribe"
+            >
+              立即订阅
+            </button>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">通知说明</view>
+    <view class="notice-list">
+      <view class="notice-item">• 微信订阅消息需要您在小程序内授权后才能接收</view>
+      <view class="notice-item">• 短信通知仅在您未收到微信消息时作为降级发送</view>
+      <view class="notice-item">• 您可以随时在本页面关闭或开启各类通知</view>
+      <view class="notice-item">• 双方驾驶员均会收到相应的事故处理通知</view>
+    </view>
+  </view>
+</view>

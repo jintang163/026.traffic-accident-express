@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as dayjs from 'dayjs';
@@ -8,6 +8,7 @@ import { VehicleEntity } from './vehicle.entity';
 import { PhotoEntity } from './photo.entity';
 import { CreateAccidentDto, DetermineLiabilityDto, SaveDraftDto, ReviewLiabilityDto } from './accident.dto';
 import { LiabilityRuleEngine, LiabilityFact } from './liability-rule-engine';
+import { NotificationService } from '../notification/notification.service';
 
 const DRAFT_KEY_PREFIX = 'draft:accident:';
 const DRAFT_TTL_SECONDS = 86400;
@@ -24,6 +25,8 @@ export class AccidentService {
     @InjectRepository(PhotoEntity)
     private photoRepository: Repository<PhotoEntity>,
     private readonly ruleEngine: LiabilityRuleEngine,
+    @Inject(forwardRef(() => NotificationService))
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(dto: CreateAccidentDto, userId?: string): Promise<AccidentEntity> {
@@ -219,7 +222,36 @@ export class AccidentService {
       accident.reviewStatus = 'none';
     }
 
-    return await this.accidentRepository.save(accident);
+    const savedAccident = await this.accidentRepository.save(accident);
+
+    if (!conclusion.needsManualReview) {
+      this.triggerLiabilityNotification(savedAccident).catch((err) => {
+        console.warn('[AccidentService] 定责通知推送失败:', err.message);
+      });
+    }
+
+    return savedAccident;
+  }
+
+  private async triggerLiabilityNotification(accident: AccidentEntity): Promise<void> {
+    const vehicles = accident.vehicles || [];
+    const vehicleA = vehicles.find((v) => v.vehicleOrder === 1) || vehicles[0];
+    const vehicleB = vehicles.find((v) => v.vehicleOrder === 2) || vehicles[1];
+
+    const partyAInfo = {
+      userId: accident.createdBy || undefined,
+      phone: vehicleA?.ownerPhone || undefined,
+    };
+
+    const partyBInfo = {
+      phone: vehicleB?.ownerPhone || undefined,
+    };
+
+    await this.notificationService.buildAndPushLiabilityNotification(
+      accident,
+      partyAInfo,
+      partyBInfo,
+    );
   }
 
   private buildFactFromAccident(accident: AccidentEntity): LiabilityFact {
@@ -275,7 +307,13 @@ export class AccidentService {
       accident.liabilityResult.determinedAt = new Date();
     }
 
-    return await this.accidentRepository.save(accident);
+    const savedAccident = await this.accidentRepository.save(accident);
+
+    this.triggerLiabilityNotification(savedAccident).catch((err) => {
+      console.warn('[AccidentService] 人工审核定责通知推送失败:', err.message);
+    });
+
+    return savedAccident;
   }
 
   async getReviewList(params?: {

@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as path from 'path';
@@ -9,6 +9,7 @@ import { CreateEvidenceDto, QueryEvidenceDto, UpdateEvidenceStatusDto } from './
 import { HashAndChainService, HashResult, ChainResult } from './hash-and-chain.service';
 import { CloudStorageService, UploadResult } from './cloud-storage.service';
 import { ImageCompressionService } from './image-compression.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class EvidenceService {
@@ -23,6 +24,8 @@ export class EvidenceService {
     private hashAndChainService: HashAndChainService,
     private cloudStorageService: CloudStorageService,
     private imageCompressionService: ImageCompressionService,
+    @Inject(forwardRef(() => NotificationService))
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(dto: CreateEvidenceDto, file?: Express.Multer.File): Promise<EvidenceEntity> {
@@ -330,5 +333,25 @@ export class EvidenceService {
     });
 
     return { count, max: this.MAX_PHOTOS_PER_ACCIDENT };
+  }
+
+  async sendEvidenceReminder(
+    accidentId: string,
+    reminder: string,
+    partyInfo: { userId?: string; openid?: string; phone?: string },
+    accident?: any,
+  ): Promise<void> {
+    this.logger.log(`发送证据补充提醒: accidentId=${accidentId}`);
+
+    if (!accident) {
+      this.logger.warn('事故信息缺失，无法发送证据补充提醒');
+      return;
+    }
+
+    await this.notificationService.buildAndPushEvidenceReminder(
+      accident,
+      reminder,
+      partyInfo,
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as dayjs from 'dayjs';
@@ -12,6 +12,7 @@ import { QrCodeService } from './qrcode.service';
 import { CloudStorageService } from '../evidence/cloud-storage.service';
 import { ThumbnailService } from './thumbnail.service';
 import { EmailService } from './email.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class CertificateService {
@@ -27,6 +28,8 @@ export class CertificateService {
     private cloudStorageService: CloudStorageService,
     private thumbnailService: ThumbnailService,
     private emailService: EmailService,
+    @Inject(forwardRef(() => NotificationService))
+    private readonly notificationService: NotificationService,
   ) {}
 
   private getApiBaseUrl(): string {
@@ -118,11 +121,37 @@ export class CertificateService {
     const saved = await this.certificateRepository.save(certificate);
     this.logger.log('认定书生成成功: ' + saved.id + ' 模板类型: ' + templateType);
 
+    this.triggerCertificateNotification(accident, saved).catch((err) => {
+      this.logger.warn('认定书通知推送失败: ' + err.message);
+    });
+
     this.generateAndUploadPdf(saved.id).catch((err) => {
       this.logger.error('PDF异步生成失败: ' + err.message);
     });
 
     return saved;
+  }
+
+  private async triggerCertificateNotification(accident: any, certificate: CertificateEntity): Promise<void> {
+    const vehicles = accident.vehicles || [];
+    const vehicleA = vehicles.find((v: any) => v.vehicleOrder === 1) || vehicles[0];
+    const vehicleB = vehicles.find((v: any) => v.vehicleOrder === 2) || vehicles[1];
+
+    const partyAInfo = {
+      userId: accident.createdBy || undefined,
+      phone: vehicleA?.ownerPhone || undefined,
+    };
+
+    const partyBInfo = {
+      phone: vehicleB?.ownerPhone || undefined,
+    };
+
+    await this.notificationService.buildAndPushCertificateNotification(
+      accident,
+      certificate,
+      partyAInfo,
+      partyBInfo,
+    );
   }
 
   async generateAndUploadPdf(certificateId: string): Promise<CertificateEntity> {

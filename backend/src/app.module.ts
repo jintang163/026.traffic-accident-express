@@ -11,6 +11,7 @@ import { AppealModule } from './modules/appeal/appeal.module';
 import { SecurityModule } from './modules/security/security.module';
 import { AuditLogModule } from './modules/audit/audit-log.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AdminModule } from './modules/admin/admin.module';
     SecurityModule,
     AuditLogModule,
     AdminModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}

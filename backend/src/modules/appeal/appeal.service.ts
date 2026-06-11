@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as dayjs from 'dayjs';
@@ -7,6 +7,7 @@ import { AppealEntity, AppealStatus } from './appeal.entity';
 import { CreateAppealDto, ReviewAppealDto } from './appeal.dto';
 import { AccidentService } from '../accident/accident.service';
 import { SecurityVerifyService } from '../security/security-verify.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class AppealService {
@@ -17,6 +18,8 @@ export class AppealService {
     private appealRepository: Repository<AppealEntity>,
     private accidentService: AccidentService,
     private securityVerifyService: SecurityVerifyService,
+    @Inject(forwardRef(() => NotificationService))
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(dto: CreateAppealDto, userId?: string): Promise<AppealEntity> {
@@ -151,7 +154,30 @@ export class AppealService {
 
     const saved = await this.appealRepository.save(appeal);
     this.logger.log('申诉审核完成: ' + saved.id + ' -> ' + saved.status);
+
+    if (dto.result === 'approved' || dto.result === 'rejected') {
+      this.triggerAppealNotification(saved).catch((err) => {
+        this.logger.warn('申诉结果通知推送失败: ' + err.message);
+      });
+    }
+
     return saved;
+  }
+
+  private async triggerAppealNotification(appeal: AppealEntity): Promise<void> {
+    const accident = appeal.accident;
+    if (!accident) return;
+
+    const partyInfo = {
+      userId: appeal.createdBy || undefined,
+      phone: appeal.phone || undefined,
+    };
+
+    await this.notificationService.buildAndPushAppealNotification(
+      appeal,
+      accident,
+      partyInfo,
+    );
   }
 
   async withdraw(id: string, userId?: string): Promise<AppealEntity> {

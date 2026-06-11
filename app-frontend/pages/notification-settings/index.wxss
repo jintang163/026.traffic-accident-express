@@ -1,0 +1,122 @@
+.container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20rpx 0;
+}
+
+.section {
+  background-color: #fff;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  padding: 30rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.section-desc {
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 30rpx;
+}
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.template-item {
+  background-color: #fafafa;
+  border-radius: 12rpx;
+  padding: 24rpx;
+}
+
+.template-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20rpx;
+}
+
+.template-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.template-info {
+  flex: 1;
+}
+
+.template-title {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.template-desc {
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.5;
+}
+
+.template-actions {
+  border-top: 1rpx solid #eee;
+  padding-top: 20rpx;
+}
+
+.action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0;
+}
+
+.action-label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.subscribe-info {
+  margin-top: 12rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx dashed #eee;
+}
+
+.info-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.subscribe-btn-wrapper {
+  margin-top: 16rpx;
+}
+
+.subscribe-btn {
+  background-color: #1890ff;
+  color: #fff;
+  font-size: 28rpx;
+  border-radius: 40rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+}
+
+.subscribe-btn::after {
+  border: none;
+}
+
+.notice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.notice-item {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+}
